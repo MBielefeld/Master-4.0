@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 
 namespace Master40.Extensions
 {
+
     public static class ExtensionMethods
     {
         public static IEnumerable<Color> GetGradients(Color start, Color end, int steps)

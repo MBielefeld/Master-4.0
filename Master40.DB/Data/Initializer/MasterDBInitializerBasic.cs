@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using Master40.DB.Data.Context;
 using Master40.DB.Models;
+using Master40.DB.Enums;
+using Master40.DB.DB.Enums;
 
 namespace Master40.DB.Data.Initializer
 {
@@ -143,6 +145,7 @@ namespace Master40.DB.Data.Initializer
             var simConfig = new SimulationConfiguration
             {
                 Name = "Test config",
+                LotsizeType = LotsizeType.LotsizeStatic,
                 Lotsize = 1,
                 MaxCalculationTime = 120, // test  // 10080, // 7 days
                 OrderQuantity = 0,

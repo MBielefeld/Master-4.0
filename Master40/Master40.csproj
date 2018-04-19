@@ -20,6 +20,10 @@
     <Content Remove="BusinessLogic\**" />
     <EmbeddedResource Remove="BusinessLogic\**" />
     </ItemGroup>
+
+  <ItemGroup>
+    <Compile Remove="Extensions\Dropdown.cs" />
+  </ItemGroup>
   <ItemGroup>
     <PackageReference Include="ChartJSCore" Version="1.1.5" />
     <PackageReference Include="cldrjs" Version="0.4.8" />

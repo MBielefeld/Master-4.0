@@ -1,6 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Text;
+using Master40.DB.DB.Enums;
+using Master40.DB.Enums;
 
 namespace Master40.DB.Models
 {
@@ -9,6 +12,8 @@ namespace Master40.DB.Models
         public string Name { get; set; }
         public int Time { get; set; }
         public int MaxCalculationTime { get; set; }
+        [EnumDataType(typeof(LotsizeType))]
+        public  LotsizeType LotsizeType { get; set; }
         public int Lotsize { get; set; }
         public int OrderQuantity { get; set; }
         public int Seed { get; set; }
@@ -24,4 +29,5 @@ namespace Master40.DB.Models
         public int DynamicKpiTimeSpan { get; set; }
         public double WorkTimeDeviation { get; set; }
     }
+
 }
