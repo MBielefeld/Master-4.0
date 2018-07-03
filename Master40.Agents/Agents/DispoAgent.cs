@@ -4,7 +4,6 @@ using Master40.Agents.Agents.Internal;
 using Master40.Agents.Agents.Model;
 using Master40.DB.Data.Helper;
 using Master40.DB.Models;
-using Master40.DB.Enums;
 using Master40.Tools.Simulation;
 
 namespace Master40.Agents.Agents
@@ -15,7 +14,6 @@ namespace Master40.Agents.Agents
         private RequestItem RequestItem { get; set; }
         private int QuantityToProduce { get; set; }
         private Agent StockAgent { get; set; }
-        private SimulationConfiguration simulationConfiguration { get; }
         /// <summary>
         /// First  ask Store for Item and wait for Response
         /// secont Create Production
@@ -26,12 +24,11 @@ namespace Master40.Agents.Agents
         /// <param name="name"></param>
         /// <param name="debug"></param>
         /// <param name="requestItem"></param>
-        public DispoAgent(Agent creator, Agent system, string name, bool debug, RequestItem requestItem, SimulationConfiguration simConfiguration) : base(creator, name, debug)
+        public DispoAgent(Agent creator, Agent system, string name, bool debug, RequestItem requestItem) : base(creator, name, debug)
         {
             SystemAgent = system;
             RequestItem = requestItem;
             RequestItem.Requester = this;
-            simulationConfiguration = simConfiguration;
             //Instructions.Add(new Instruction { Method = "ResponseFromStock", ExpectedObjecType = typeof(string) });
             //Instructions.Add(new Instruction { Method = "CreateProductionAgent", ExpectedObjecType = typeof(string) });
             RequestFromStock();
@@ -84,10 +81,17 @@ namespace Master40.Agents.Agents
             // else Create Production Agents if ToBuild
             if (RequestItem.Article.ToBuild)
             {
-
                 CreateAndEnqueueInstuction(methodName: Agents.SystemAgent.InstuctionsMethods.RequestArticleBom.ToString(),
-                                    objectToProcess: RequestItem,
-                                    targetAgent: SystemAgent);
+                                        objectToProcess: RequestItem,
+                                        targetAgent: SystemAgent);
+                // and request the Article from  stock at Due Time
+                if (RequestItem.IsHeadDemand)
+                {
+                    CreateAndEnqueueInstuction(methodName: StorageAgent.InstuctionsMethods.ProvideArticleAtDue.ToString(),
+                                      objectToProcess: RequestItem, // may needs later a more complex answer for now just remove item from stock
+                                          targetAgent: StockAgent,
+                                              waitFor: RequestItem.DueTime - Context.TimePeriod);
+                }
             }
             // Not in Stock and Not ToBuild Agent has to Wait for Stock To Provide Materials
 
@@ -102,10 +106,6 @@ namespace Master40.Agents.Agents
             item.Article = article ?? throw new InvalidCastException(this.Name + " failed to Cast Article on Instruction.ObjectToProcess");
             item.OrderId = RequestItem.OrderId;
 
-            DebugMessage("RequestItem " + item.Article.WorkSchedules.First().MachineGroup.Name + " // ");
-
-            //item.Article.WorkSchedules.First().MachineTool.Name
-            
             // set new Due Time if there is Work to do.
             if (RequestItem.Article.WorkSchedules != null)
                 item.DueTime = RequestItem.DueTime - RequestItem.Article.WorkSchedules.Sum(x => x.Duration); //- Calculations.GetTransitionTimeForWorkSchedules(item.Article.WorkSchedules);
@@ -113,53 +113,11 @@ namespace Master40.Agents.Agents
             // Creates a Production Agent for each element that has to be produced
             for (int i = 0; i < QuantityToProduce; i++)
             {
-               
                 new ProductionAgent(creator: StockAgent,
                                        name: "Production(" + RequestItem.Article.Name + ", Nr. " + i + ")",
                                       debug: DebugThis,
-                                requestItem: item,
-                                simConfiguration: simulationConfiguration
-                                );
-               
+                                requestItem: item);
             }
-            /*
-            //Create a ProductionSet Request 
-            CreateAndEnqueueInstuction(
-                methodName: StorageAgent.InstuctionsMethods.CreateOrUpdateProductionSet.ToString(),
-                objectToProcess: RequestItem,
-                targetAgent: StockAgent
-                );
-
-            
-        /*if (item.ProduceQuantity != 0)
-        {
-            int i = 0;
-            do
-            {
-                new ProductionAgent(creator: StockAgent,
-                                   name: "Production(" + RequestItem.Article.Name + ", Nr. " + i + ")",
-                                  debug: DebugThis,
-                            requestItem: item,
-                            simConfiguration: simulationConfiguration
-                            );
-                if (item.ProduceQuantity - simulationConfiguration.Lotsize > 0)
-                {
-                    item.ProduceQuantity = item.ProduceQuantity - simulationConfiguration.Lotsize;
-                }
-                else
-                {
-                    item.ProduceQuantity = 0;
-                }
-                i++;
-            }
-            while (item.ProduceQuantity > simulationConfiguration.Lotsize && simulationConfiguration.LotsizeType == LotsizeType.LotsizeStatic);
-        }
-        //{
-        //if(QuantityToProduce<0 ? ) QuantityToProduce = QuantityToProduce - simulationConfiguration.Lotsize;
-        //} while(QuantityToProduce>simulationConfiguration.Lotsize && simulationConfiguration.LotsizeType == LotsizeType.LotsizeStatic)
-
-         */
-
         }
 
         private void WithdrawMaterialsFromStock(InstructionSet instructionSet)
@@ -168,11 +126,10 @@ namespace Master40.Agents.Agents
                                   objectToProcess: RequestItem,
                                       targetAgent: StockAgent);
         }
-
+        
         private void RequestProvided(InstructionSet instructionSet)
         {
             this.Finish();
         }
-        
     }
 }

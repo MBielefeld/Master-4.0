@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using Master40.DB.Data.Context;
@@ -8,7 +7,6 @@ using Master40.DB.Enums;
 using Master40.DB.Models;
 using Microsoft.EntityFrameworkCore;
 using MathNet.Numerics.Statistics;
-using MathNet.Numerics.Statistics.Mcmc;
 
 namespace Master40.Tools.Simulation
 {
@@ -71,7 +69,7 @@ namespace Master40.Tools.Simulation
             var simConfig = context.SimulationConfigurations.Single(a => a.Id == simulationId);
             var stockEvoLutionsContext = context.StockExchanges.Include(x => x.Stock).ThenInclude(x => x.Article)
                 .Where(x => x.SimulationConfigurationId == simulationId && x.SimulationType == simulationType)
-                .Where(a => a.Stock.Article.ToBuild).AsQueryable();
+                .Where(t => t.State == State.Finished && t.Stock.Article.ToBuild).AsQueryable();
             //.Where(x => x.SimulationType == simulationType && x.SimulationConfigurationId == simulationId && x.SimulationNumber == simulationNumber);
             if (!final)
                 stockEvoLutionsContext = stockEvoLutionsContext
@@ -207,10 +205,11 @@ namespace Master40.Tools.Simulation
             var finishedProducts = final
                 ? context.SimulationWorkschedules
                     .Where(x => x.SimulationConfigurationId == simulationId && x.SimulationType == simulationType)
-                    .Where(a => a.ParentId.Equals("[]") && a.Start > simConfig.SettlingStart && a.HierarchyNumber == 10).ToList()
+                    .Where(a => a.ParentId.Equals("[]") && a.Start > simConfig.SettlingStart && a.HierarchyNumber == 20 && 
+                           a.End <= simConfig.SimulationEndTime).ToList()
                 : context.SimulationWorkschedules
                     .Where(x => x.SimulationConfigurationId == simulationId && x.SimulationType == simulationType).Where(a =>
-                    a.ParentId.Equals("[]") && a.Start >= time - simConfig.DynamicKpiTimeSpan && a.HierarchyNumber == 10 &&
+                    a.ParentId.Equals("[]") && a.Start >= time - simConfig.DynamicKpiTimeSpan && a.HierarchyNumber == 20 &&
                     a.End <= time - simConfig.DynamicKpiTimeSpan).ToList();
             var leadTimes = new List<Kpi>();
             var tts = new List<Kpi>();
@@ -233,7 +232,7 @@ namespace Master40.Tools.Simulation
                 });
             }
 
-            var products = leadTimes.Where(a => a.Name.Equals("Tisch")).Select(x => x.Name).Distinct();
+            var products = leadTimes.Where(a => a.Name.Contains("-Truck")).Select(x => x.Name).Distinct();
             var leadTimesBoxPlot = tts;
             //calculate Average per article
 
@@ -524,25 +523,26 @@ namespace Master40.Tools.Simulation
     
     
             */
-            var orderTimeliness = final
-                ? context.SimulationOrders
+            var orderTimeliness = final ?
+                //then
+                context.SimulationOrders
                 .Where(x => x.SimulationConfigurationId == simulationId && x.SimulationType == simulationType)
                 .Where(a =>
                         a.State == State.Finished && a.CreationTime >= simConfig.SettlingStart &&
                         a.FinishingTime <= simConfig.SimulationEndTime &&
                         a.CreationTime < simConfig.SimulationEndTime)
                     .Select(x => new {x.Name, x.FinishingTime, x.DueTime}).ToList()
+                // Else
                 : context.SimulationOrders
                     .Where(x => x.SimulationConfigurationId == simulationId && x.SimulationType == simulationType)
-                    .Where(a =>
-                        a.State == State.Finished && a.FinishingTime >= time - simConfig.DynamicKpiTimeSpan)
+                    .Where(a => a.State == State.Finished && a.FinishingTime >= time - simConfig.DynamicKpiTimeSpan)
                     .Select(x => new {x.Name, x.FinishingTime, x.DueTime}).ToList();
 
             if (!orderTimeliness.Any()) return;
             var kpis = orderTimeliness.GroupBy(g => g.Name).Select(o => new Kpi()
             {
                 Name = o.Key,
-                Value = Math.Round((o.Count(x => (x.DueTime - x.FinishingTime) > 0) / (double) o.Count()), 2),
+                Value = Math.Round((o.Count(x => (x.DueTime - x.FinishingTime) >= 0) / (double) o.Count()), 2),
                 ValueMin = Math.Round((double) o.Min(m => m.FinishingTime - m.DueTime), 2),
                 ValueMax = Math.Round((double) o.Max(n => n.FinishingTime - n.DueTime), 2),
                 Count = o.Count(c => c.Name == o.Key),
@@ -575,6 +575,7 @@ namespace Master40.Tools.Simulation
             var stockEvoLutionsContext = context.StockExchanges
                 .Where(x => x.SimulationConfigurationId == simulationId && x.SimulationType == simulationType)
                 .Where(a => a.Time < simConfig.SimulationEndTime)
+                .Where(t => t.State == State.Finished)
                 .Include(x => x.Stock).ThenInclude(x => x.Article).ToList();
             //.Where(x => x.SimulationType == simulationType && x.SimulationConfigurationId == simulationId && x.SimulationNumber == simulationNumber);
             if (!final)

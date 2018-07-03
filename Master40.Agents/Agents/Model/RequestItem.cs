@@ -11,6 +11,7 @@ namespace Master40.Agents.Agents.Model
         {
             Provided = false;
             IsHeadDemand = false;
+            ProviderList = new List<Guid>();
         }
         public Article Article { get; set; }
         public IDemandToProvider IDemandToProvider { get; set; }
@@ -19,6 +20,7 @@ namespace Master40.Agents.Agents.Model
         public int QuantityInProduction { get; set; }
         public int DueTime { get; set; }
         public Agent Requester { get; set; }
+        public List<Guid> ProviderList { get; set; }
         public int OrderId { get; set; }
         public int Providable { get; set; }
         public bool Provided { get; set; }

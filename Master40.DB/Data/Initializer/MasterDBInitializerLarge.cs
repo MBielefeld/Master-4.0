@@ -99,8 +99,6 @@ namespace Master40.DB.Data.Initializer
                 new Article{Name="Button", ArticleTypeId = articleTypes.Single( s => s.Name == "Material").Id, CreationDate = DateTime.Parse("2002-09-01"), DeliveryPeriod = 10, UnitId = units.Single( s => s.Name == "Kilo").Id, Price = 0.05, ToPurchase = true, ToBuild = false},
                 new Article{Name="Packing", ArticleTypeId = articleTypes.Single( s => s.Name == "Consumable").Id, CreationDate = DateTime.Parse("2005-09-01"), DeliveryPeriod  = 4, UnitId = units.Single( s => s.Name == "Kilo").Id, Price = 2.15, ToPurchase = true, ToBuild = false},
                 new Article{Name="User Manual", ArticleTypeId = articleTypes.Single( s => s.Name == "Consumable").Id, CreationDate = DateTime.Parse("2005-09-01"), DeliveryPeriod  = 4, UnitId = units.Single( s => s.Name == "Kilo").Id, Price = 0.50, ToPurchase = true, ToBuild = false},
-
-
             };
 
             context.Articles.AddRange(articles);
@@ -270,30 +268,30 @@ namespace Master40.DB.Data.Initializer
 
             var artToBusinessPartner = new ArticleToBusinessPartner[]
             {
-                new ArticleToBusinessPartner{ BusinessPartnerId = businessPartner2.Id, ArticleId = articles.Single(x => x.Name=="Skeleton").Id,PackSize = 10,Price = 20.00, DueTime = 2880},
-                new ArticleToBusinessPartner{ BusinessPartnerId = businessPartner2.Id, ArticleId = articles.Single(x => x.Name=="Truck-Bed").Id,PackSize = 10,Price = 20.00, DueTime = 2880},
-                new ArticleToBusinessPartner{ BusinessPartnerId = businessPartner2.Id, ArticleId = articles.Single(x => x.Name=="Chassis Type: Dump").Id, PackSize = 10,Price = 20.00, DueTime = 2880},
-                new ArticleToBusinessPartner{ BusinessPartnerId = businessPartner2.Id, ArticleId = articles.Single(x => x.Name=="Chassis Type: Race").Id, PackSize = 10,Price = 25.00, DueTime = 2880},
-                new ArticleToBusinessPartner{ BusinessPartnerId = businessPartner2.Id, ArticleId = articles.Single(x => x.Name=="Cabin").Id,PackSize = 10,Price = 1.75, DueTime = 1440},
-                new ArticleToBusinessPartner{ BusinessPartnerId = businessPartner2.Id, ArticleId = articles.Single(x => x.Name=="Engine-Block").Id, PackSize = 10,Price = 0.40, DueTime = 1440},
-                new ArticleToBusinessPartner{ BusinessPartnerId = businessPartner2.Id, ArticleId = articles.Single(x => x.Name=="Engine Race Extension").Id, PackSize = 10,Price = 1.00, DueTime = 1440},
-                new ArticleToBusinessPartner{ BusinessPartnerId = businessPartner2.Id, ArticleId = articles.Single(x => x.Name=="Side wall long").Id,PackSize = 10,Price = 0.55, DueTime = 1440},
-                new ArticleToBusinessPartner{ BusinessPartnerId = businessPartner2.Id, ArticleId = articles.Single(x => x.Name=="Side wall short").Id,PackSize = 10,Price = 0.45, DueTime = 1440},
-                new ArticleToBusinessPartner{ BusinessPartnerId = businessPartner2.Id, ArticleId = articles.Single(x => x.Name=="Base plate Truck-Bed").Id, PackSize = 10,Price = 0.40, DueTime = 1440},
-                new ArticleToBusinessPartner{ BusinessPartnerId = businessPartner2.Id, ArticleId = articles.Single(x => x.Name=="Dump Joint").Id /*Kippgelenk*/,PackSize = 50,Price = 0.90, DueTime = 1440},
-                new ArticleToBusinessPartner{ BusinessPartnerId = businessPartner2.Id, ArticleId = articles.Single(x => x.Name=="Wheel").Id, PackSize = 150,Price = 0.35, DueTime = 1440},
-                new ArticleToBusinessPartner{ BusinessPartnerId = businessPartner2.Id, ArticleId = articles.Single(x => x.Name=="Base plate").Id, PackSize = 10,Price = 0.80, DueTime = 1440},
-                new ArticleToBusinessPartner{ BusinessPartnerId = businessPartner2.Id, ArticleId = articles.Single(x => x.Name=="Semitrailer" /*Aufleger*/).Id, PackSize = 25,Price = 0.10, DueTime = 1440},
-                new ArticleToBusinessPartner{ BusinessPartnerId = businessPartner2.Id, ArticleId = articles.Single(x => x.Name=="Race Wing").Id, PackSize = 10,Price = 1.50, DueTime = 1440},
-                new ArticleToBusinessPartner{ BusinessPartnerId = businessPartner2.Id, ArticleId = articles.Single(x => x.Name=="Washer").Id,PackSize = 150,Price = 0.02, DueTime = 1440},
-                new ArticleToBusinessPartner{ BusinessPartnerId = businessPartner2.Id, ArticleId = articles.Single(x => x.Name=="Timber Plate 1,5m x 3,0m").Id, PackSize = 100,Price = 0.20, DueTime = 1440},
-                new ArticleToBusinessPartner{ BusinessPartnerId = businessPartner2.Id, ArticleId = articles.Single(x => x.Name=="Timber Block 0,20m x 0,20m").Id, PackSize = 100,Price = 0.20, DueTime = 1440},
-                new ArticleToBusinessPartner{ BusinessPartnerId = businessPartner2.Id, ArticleId = articles.Single(x => x.Name=="Glue").Id, PackSize = 1000,Price = 0.01, DueTime = 1440},
-                new ArticleToBusinessPartner{ BusinessPartnerId = businessPartner2.Id, ArticleId = articles.Single(x => x.Name=="Pegs").Id, PackSize = 200,Price = 0.01, DueTime = 1440},
-                new ArticleToBusinessPartner{ BusinessPartnerId = businessPartner2.Id, ArticleId = articles.Single(x => x.Name=="Pole").Id, PackSize = 200,Price = 0.25, DueTime = 1440},
-                new ArticleToBusinessPartner{ BusinessPartnerId = businessPartner2.Id, ArticleId = articles.Single(x => x.Name=="Button").Id, PackSize = 500,Price = 0.05, DueTime = 1440},
-                new ArticleToBusinessPartner{ BusinessPartnerId = businessPartner2.Id, ArticleId = articles.Single(x => x.Name=="Packing").Id, PackSize = 50,Price = 2.50, DueTime = 1440},
-                new ArticleToBusinessPartner{ BusinessPartnerId = businessPartner2.Id, ArticleId = articles.Single(x => x.Name=="User Manual").Id, PackSize = 50,Price = 0.20, DueTime = 1440},
+                new ArticleToBusinessPartner{ BusinessPartnerId = businessPartner2.Id, ArticleId = articles.Single(x => x.Name=="Skeleton").Id,PackSize = 10,Price = 20.00, DueTime = 15},
+                new ArticleToBusinessPartner{ BusinessPartnerId = businessPartner2.Id, ArticleId = articles.Single(x => x.Name=="Truck-Bed").Id,PackSize = 10,Price = 20.00, DueTime = 15},
+                new ArticleToBusinessPartner{ BusinessPartnerId = businessPartner2.Id, ArticleId = articles.Single(x => x.Name=="Chassis Type: Dump").Id, PackSize = 10,Price = 20.00, DueTime = 15},
+                new ArticleToBusinessPartner{ BusinessPartnerId = businessPartner2.Id, ArticleId = articles.Single(x => x.Name=="Chassis Type: Race").Id, PackSize = 10,Price = 25.00, DueTime = 15},
+                new ArticleToBusinessPartner{ BusinessPartnerId = businessPartner2.Id, ArticleId = articles.Single(x => x.Name=="Cabin").Id,PackSize = 10,Price = 1.75, DueTime = 15},
+                new ArticleToBusinessPartner{ BusinessPartnerId = businessPartner2.Id, ArticleId = articles.Single(x => x.Name=="Engine-Block").Id, PackSize = 10,Price = 0.40, DueTime = 15},
+                new ArticleToBusinessPartner{ BusinessPartnerId = businessPartner2.Id, ArticleId = articles.Single(x => x.Name=="Engine Race Extension").Id, PackSize = 10,Price = 1.00, DueTime = 15},
+                new ArticleToBusinessPartner{ BusinessPartnerId = businessPartner2.Id, ArticleId = articles.Single(x => x.Name=="Side wall long").Id,PackSize = 10,Price = 0.55, DueTime = 15},
+                new ArticleToBusinessPartner{ BusinessPartnerId = businessPartner2.Id, ArticleId = articles.Single(x => x.Name=="Side wall short").Id,PackSize = 10,Price = 0.45, DueTime = 15},
+                new ArticleToBusinessPartner{ BusinessPartnerId = businessPartner2.Id, ArticleId = articles.Single(x => x.Name=="Base plate Truck-Bed").Id, PackSize = 10,Price = 0.40, DueTime = 15},
+                new ArticleToBusinessPartner{ BusinessPartnerId = businessPartner2.Id, ArticleId = articles.Single(x => x.Name=="Dump Joint").Id /*Kippgelenk*/,PackSize = 50,Price = 0.90, DueTime = 15},
+                new ArticleToBusinessPartner{ BusinessPartnerId = businessPartner2.Id, ArticleId = articles.Single(x => x.Name=="Wheel").Id, PackSize = 150,Price = 0.35, DueTime = 15},
+                new ArticleToBusinessPartner{ BusinessPartnerId = businessPartner2.Id, ArticleId = articles.Single(x => x.Name=="Base plate").Id, PackSize = 10,Price = 0.80, DueTime = 15},
+                new ArticleToBusinessPartner{ BusinessPartnerId = businessPartner2.Id, ArticleId = articles.Single(x => x.Name=="Semitrailer" /*Aufleger*/).Id, PackSize = 25,Price = 0.10, DueTime = 15},
+                new ArticleToBusinessPartner{ BusinessPartnerId = businessPartner2.Id, ArticleId = articles.Single(x => x.Name=="Race Wing").Id, PackSize = 10,Price = 1.50, DueTime = 15},
+                new ArticleToBusinessPartner{ BusinessPartnerId = businessPartner2.Id, ArticleId = articles.Single(x => x.Name=="Washer").Id,PackSize = 150,Price = 0.02, DueTime = 15},
+                new ArticleToBusinessPartner{ BusinessPartnerId = businessPartner2.Id, ArticleId = articles.Single(x => x.Name=="Timber Plate 1,5m x 3,0m").Id, PackSize = 100,Price = 0.20, DueTime = 15},
+                new ArticleToBusinessPartner{ BusinessPartnerId = businessPartner2.Id, ArticleId = articles.Single(x => x.Name=="Timber Block 0,20m x 0,20m").Id, PackSize = 100,Price = 0.20, DueTime = 15},
+                new ArticleToBusinessPartner{ BusinessPartnerId = businessPartner2.Id, ArticleId = articles.Single(x => x.Name=="Glue").Id, PackSize = 1000,Price = 0.01, DueTime = 15},
+                new ArticleToBusinessPartner{ BusinessPartnerId = businessPartner2.Id, ArticleId = articles.Single(x => x.Name=="Pegs").Id, PackSize = 200,Price = 0.01, DueTime = 15},
+                new ArticleToBusinessPartner{ BusinessPartnerId = businessPartner2.Id, ArticleId = articles.Single(x => x.Name=="Pole").Id, PackSize = 200,Price = 0.25, DueTime = 15},
+                new ArticleToBusinessPartner{ BusinessPartnerId = businessPartner2.Id, ArticleId = articles.Single(x => x.Name=="Button").Id, PackSize = 500,Price = 0.05, DueTime = 15},
+                new ArticleToBusinessPartner{ BusinessPartnerId = businessPartner2.Id, ArticleId = articles.Single(x => x.Name=="Packing").Id, PackSize = 50,Price = 2.50, DueTime = 15},
+                new ArticleToBusinessPartner{ BusinessPartnerId = businessPartner2.Id, ArticleId = articles.Single(x => x.Name=="User Manual").Id, PackSize = 50,Price = 0.20, DueTime = 15},
 
             };
             context.ArticleToBusinessPartners.AddRange(artToBusinessPartner);
