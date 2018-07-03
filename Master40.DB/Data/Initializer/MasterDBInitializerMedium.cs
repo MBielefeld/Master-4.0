@@ -58,8 +58,8 @@ namespace Master40.DB.Data.Initializer
 
             var machineTools = new MachineTool[]
             {
-                new MachineTool{MachineId=machines.Single(m => m.Name == "Säge").Id, SetupTime=1, Name="Sägeblatt 1mm Zahnabstant"},
-                new MachineTool{MachineId=machines.Single(m => m.Name == "Bohrer").Id, SetupTime=1, Name="M6 Bohrkopf"},
+                new MachineTool{MachineToolId=machines.Single(m => m.Name == "Säge").Id, SetupTime=1, Name="Sägeblatt 1mm Zahnabstant"},
+                new MachineTool{MachineToolId=machines.Single(m => m.Name == "Bohrer").Id, SetupTime=1, Name="M6 Bohrkopf"},
             };
             foreach (var mt in machineTools)
             {

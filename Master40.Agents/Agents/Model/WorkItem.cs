@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Runtime.InteropServices;
 using Master40.Agents.Agents.Internal;
 using Master40.DB.Data.Helper;
 using Master40.DB.Interfaces;
@@ -24,6 +25,8 @@ namespace Master40.Agents.Agents.Model
         public Agent ComunicationAgent { get; set; }
         public WorkSchedule WorkSchedule { get; set; }
         public List<Proposal> Proposals { get; set; }
+        public int Duration { get; set; }
+        public int SetupDuration { get; set; }
         public WorkItem()
         {
             Id = Guid.NewGuid();
@@ -31,8 +34,18 @@ namespace Master40.Agents.Agents.Model
             PriorityRule = currentTime => DueTime - WorkSchedule.Duration - currentTime; 
         }
         public double Priority() { return _priority; }
-        public double Priority(long time) {
-            _priority = PriorityRule(time);
+        public double Priority(long currentTime, long setupTime = 0) {
+            
+            if (setupTime == 0) {
+                _priority = PriorityRule(currentTime);
+            }
+            else
+            {
+                long timeWithoutSetup = DueTime - WorkSchedule.Duration - currentTime;
+                long timeWithSetup = DueTime - WorkSchedule.Duration - setupTime - currentTime;
+                _priority = Math.Min(timeWithoutSetup, timeWithSetup);
+            }
+            
             return _priority; }
     }
 }

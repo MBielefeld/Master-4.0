@@ -40,7 +40,7 @@ namespace Master40.Simulation.Simulation
         //private readonly HubCallback _hubCallback;
         private CapacityScheduling capacityScheduling;
 
-        private WorkTimeGenerator _workTimeGenerator;
+        private TimeGenerator _workTimeGenerator;
 
         private bool firstRunOfTheDay = true;
 
@@ -209,7 +209,7 @@ namespace Master40.Simulation.Simulation
             rebuildNets = new RebuildNets(_context);
             await PrepareSimulationContext();
             await OrderGenerator.GenerateOrders(_context, simConfig, simNumber);
-            _workTimeGenerator = new WorkTimeGenerator(simConfig.Seed, simConfig.WorkTimeDeviation, simNumber);
+            _workTimeGenerator = new TimeGenerator(simConfig.Seed, simConfig.WorkTimeDeviation, simNumber);
             var timeTable = new TimeTable<ISimulationItem>(simConfig.RecalculationTime);
             UpdateStockExchangesWithInitialValues(simulationId, simNumber);
 
@@ -697,13 +697,14 @@ namespace Master40.Simulation.Simulation
                 c.Database.OpenConnection();
                 c.Database.EnsureCreated();
                 InMemoryContext.LoadData(_evaluationContext, c);
-
+                
                 var sim = new AgentSimulation(c, _messageHub);
                 await sim.RunSim(simulationConfigurationId, simNumber);
 
                 CopyResults.Copy(c, _evaluationContext, simulationConfigurationId, simNumber, SimulationType.Decentral);
                 CalculateKpis.MachineSattleTime(_evaluationContext, simulationConfigurationId, SimulationType.Decentral, simNumber);
-
+                //TODO: implement KPIs
+                //CalculateKpis.CalculateWorkList(_evaluationContext, simulationConfigurationId, SimulationType.Decentral, simNumber);
                 CalculateKpis.CalculateAllKpis(_evaluationContext, simulationConfigurationId, SimulationType.Decentral, simNumber, true);
             }
             connection.Close();

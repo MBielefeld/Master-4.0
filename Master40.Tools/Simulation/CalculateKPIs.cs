@@ -33,6 +33,38 @@ namespace Master40.Tools.Simulation
             CalculateLayTimes(context, simulationId, simulationType, simulationNumber, final, time);
         }
 
+        public static void CalculateWorkList(ProductionDomainContext context, int simulationId,
+            SimulationType simulationType, int simulationNumber)
+        { 
+            if (context!= null)
+            {
+                var simConfig = context.SimulationConfigurations.Single(a => a.Id == simulationId);
+
+                //var workListContext = context.
+                
+                /*var workItemListContext = context.Kpis.
+
+                context.Kpis.Add(new Kpi()
+                {
+                    Name = ,
+                    Value = getCountOfWorkItemsByStatus(status),
+                    ValueMin = 0,
+                    ValueMax = 0,
+                    IsKpi = false,
+                    KpiType = KpiType.ListStatus,
+                    SimulationConfigurationId = simulationId,
+                    SimulationType = simulationType,
+                    SimulationNumber = simulationNumber,
+                    IsFinal = final
+                });
+                */
+            }
+            else {
+
+                throw new Exception();
+            }
+        }
+
         public static void CalculateLayTimes(ProductionDomainContext context, int simulationId,
             SimulationType simulationType, int simulationNumber, bool final, int time)
         {
@@ -321,7 +353,7 @@ namespace Master40.Tools.Simulation
 
             }
 
-            var products = leadTimes.Where(a => a.Name.Contains("Truck")).Select(x => x.Name).Distinct();
+            var products = leadTimes.Where(a => a.Name.Contains("Tisch")).Select(x => x.Name).Distinct();
             var leadTimesBoxPlot = new List<Kpi>();
             //calculate Average per article
 

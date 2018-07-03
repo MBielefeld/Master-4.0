@@ -54,8 +54,8 @@ namespace Master40.DB.Data.Initializer
 
             var machineTools = new MachineTool[]
             {
-                new MachineTool{MachineId=machines.Single(m => m.Name == "Saw 1").Id, SetupTime=1, Name="Saw blade"},
-                new MachineTool{MachineId=machines.Single(m => m.Name == "Drill 1").Id, SetupTime=1, Name="M6 head"},
+                new MachineTool{MachineToolId=machines.Single(m => m.Name == "Saw 1").Id, SetupTime=1, Name="Saw blade"},
+                new MachineTool{MachineToolId=machines.Single(m => m.Name == "Drill 1").Id, SetupTime=1, Name="M6 head"},
             };
             context.MachineTools.AddRange(machineTools);
             context.SaveChanges();

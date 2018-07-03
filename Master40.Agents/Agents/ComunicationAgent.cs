@@ -10,14 +10,14 @@ namespace Master40.Agents.Agents
     public class ComunicationAgent : Agent
     {
 
-        private List<WorkItem> WorkItemQueue;
+        private WorkItemList<WorkItem> WorkItemQueue;
         private List<Agent> MachineAgents;
         
         public ComunicationAgent(Agent creator, string name, bool debug, string contractType) 
             : base(creator, name, debug)
         {
             ContractType = contractType;
-            WorkItemQueue = new List<WorkItem>();
+            WorkItemQueue = new WorkItemList<WorkItem>();
             MachineAgents = new List<Agent>();
         }
         public string ContractType { get; set; }
@@ -28,6 +28,7 @@ namespace Master40.Agents.Agents
             EnqueueWorkItem,
             ProposalFromMachine,
             SetWorkItemStatus,
+            SetupMachine,
             FinishWorkItem,
         }
 
@@ -68,7 +69,7 @@ namespace Master40.Agents.Agents
 
         private void SetWorkItemStatus(InstructionSet instructionSet)
         {
-            var workItemStatus = instructionSet.ObjectToProcess as WorkItemStatus;
+            var workItemStatus = instructionSet.ObjectToProcess as Model.WorkItemStatus;
             if (workItemStatus == null)
             {
                 throw new InvalidCastException("Could not Cast >WorkItemStatus< on InstructionSet.ObjectToProcess");
@@ -174,7 +175,10 @@ namespace Master40.Agents.Agents
         /// <param name="instructionSet"></param>
         private void FinishWorkItem(InstructionSet instructionSet)
         {
-            var status = instructionSet.ObjectToProcess as WorkItemStatus;
+            //OutputItemStatus
+            WorkItemQueue.reportAllWorkItemsByStatus(this, (int) Context.TimePeriod);
+
+            var status = instructionSet.ObjectToProcess as Model.WorkItemStatus;
             if (status == null)
             {
                 throw new InvalidCastException("Could not Cast >WorkItemStatus< on InstructionSet.ObjectToProcess");
@@ -188,15 +192,11 @@ namespace Master40.Agents.Agents
                                       targetAgent: workItem.ProductionAgent);
         }
 
-
-
-
+        
         private Agent GetMachineAgentById(Guid agentId)
         {
             return MachineAgents.First(x => x.AgentId == agentId);
         }
-
-
 
     }
 }

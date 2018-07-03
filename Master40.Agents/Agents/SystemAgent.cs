@@ -55,13 +55,18 @@ namespace Master40.Agents.Agents
             // debug
             DebugMessage(" Request details for article: " + requestItem.Article.Name);
 
+
             // get BOM from Context
             var article = _productionDomainContext.Articles
                                                     .Include(x => x.WorkSchedules)
                                                         .ThenInclude(x => x.MachineGroup)
+                                                    .Include(x => x.WorkSchedules)
+                                                        .ThenInclude(x => x.MachineTool)
                                                     .Include(x => x.ArticleBoms)
                                                         .ThenInclude(x => x.ArticleChild)
                                                     .SingleOrDefault(x => x.Id == requestItem.Article.Id);
+
+           
             // calback with po.bom
             CreateAndEnqueueInstuction(methodName: DispoAgent.InstuctionsMethods.ResponseFromSystemForBom.ToString(),
                                   objectToProcess: article,
@@ -75,7 +80,8 @@ namespace Master40.Agents.Agents
             // Create Contract agents
             var ca = new ContractAgent(creator: this,
                 name: contract.Order.Name + " - Part:" + contract.Article.Name,
-                debug: this.DebugThis);
+                debug: this.DebugThis,
+                simConfiguration: _simConfig);
             // add To System
             this.ChildAgents.Add(ca);
 

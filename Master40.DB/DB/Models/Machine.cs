@@ -10,9 +10,8 @@ namespace Master40.DB.Models
         public int MachineGroupId { get; set; }
         [JsonIgnore]
         public MachineGroup MachineGroup { get; set; }
+        public MachineTool MachineTool { get; set; }
         public int Capacity { get; set; }
-        [JsonIgnore]
-        public virtual ICollection<MachineTool> MachineTools { get; set; }
         [JsonIgnore]
         public virtual ICollection<ProductionOrderWorkSchedule> ProductionOrderWorkSchedules { get; set; }
     }

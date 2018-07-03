@@ -16,6 +16,7 @@ namespace Master40.Agents.Agents.Model
         public IDemandToProvider IDemandToProvider { get; set; }
         public Guid StockExchangeId { get; set; }
         public int Quantity { get; set; }
+        public int QuantityInProduction { get; set; }
         public int DueTime { get; set; }
         public Agent Requester { get; set; }
         public int OrderId { get; set; }

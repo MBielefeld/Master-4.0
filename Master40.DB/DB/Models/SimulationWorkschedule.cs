@@ -11,6 +11,8 @@ namespace Master40.DB.Models
         public int Time { get; set; }
         public string WorkScheduleName { get; set; }
         public string Article { get; set; }
+        public int setupStart { get; set; }
+        public int setupEnd { get; set; }
         public int Start { get; set; }
         public int End { get; set; }
         public int EstimatedStart { get; set; }

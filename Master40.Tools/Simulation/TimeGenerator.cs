@@ -5,9 +5,9 @@ using MathNet.Numerics.Distributions;
 
 namespace Master40.Tools.Simulation
 {
-    public class WorkTimeGenerator
+    public class TimeGenerator
     {
-        public WorkTimeGenerator(int seed, double deviation, int simNumber)
+        public TimeGenerator(int seed, double deviation, int simNumber)
         {
             var source = new Random(seed+simNumber);
             _distribution = new LogNormal(0, deviation, source);

@@ -106,9 +106,9 @@ namespace Master40
                             , MasterDBContext context
                             , ProductionDomainContext productionDomainContext)
         {
-            Task.Run((() => { 
+            Task.Run((() => {
+                //MARVIN 22.05.2018 auskommentiert für Test
                 //MasterDBInitializerLarge.DbInitialize(context);
-                MasterDBInitializerLarge.DbInitialize(context);
                 }
             ));
             HangfireDBInitializer.DbInitialize(hangfireContext);

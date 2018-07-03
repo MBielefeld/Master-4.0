@@ -18,12 +18,15 @@ namespace Master40.Agents.Agents
         public Stock StockElement { get; set; }
         public string StockFor { get; }
         private List<RequestItem> RequestedItems { get; set; }
-
-        public StorageAgent(Agent creator, string name, bool debug, Stock stockElement) : base(creator, name, debug)
+        private List<ProductionSet> productionSets { get; set; }
+        private SimulationConfiguration simulationConfiguration { get; set; }
+        public StorageAgent(Agent creator, string name, bool debug, Stock stockElement, SimulationConfiguration simConfiguration) : base(creator, name, debug)
         {
             StockElement = stockElement;
             StockFor = stockElement.Article.Name;
             RequestedItems = new List<RequestItem>();
+            //productionSets = new List<ProductionSet>();
+            simulationConfiguration = simConfiguration;
             ProviderList = new List<Guid>();
             var stockExchange = new StockExchange
             {
@@ -44,7 +47,8 @@ namespace Master40.Agents.Agents
             RequestArticle,
             ResponseFromProduction,
             StockRefill,
-            WithdrawlMaterial
+            WithdrawlMaterial,
+            //CreateOrUpdateProductionSet
         }
 
         /// <summary>
@@ -62,7 +66,6 @@ namespace Master40.Agents.Agents
             if (request == null)
                 throw new InvalidCastException("Cast to Request Item Failed");
 
-
             // try to make Reservation
             var stockReservation = MakeReservationFor(request);
             if (!stockReservation.IsInStock)
@@ -71,13 +74,12 @@ namespace Master40.Agents.Agents
                 RequestedItems.Add(request);
             }
 
-
             // Create Callback // Probably not required here
             CreateAndEnqueueInstuction(methodName: DispoAgent.InstuctionsMethods.ResponseFromStock.ToString(),
                                   objectToProcess: stockReservation, // may needs later a more complex answer for now just remove item from stock
                                       targetAgent: instructionSet.SourceAgent /*,
                                           waitFor: request.DueTime */ );  // its Source Agent becaus this message is the Answer to the Instruction set.
-                                     
+
         }
 
         private void ResponseFromProduction(InstructionSet instructionSet)
@@ -89,17 +91,18 @@ namespace Master40.Agents.Agents
             }
 
             DebugMessage("Production Agent Finished Work: " + productionAgent.Name);
-            
+
 
             // Add the Produced item to Stock
             StockElement.Current++;
-            var stockExchange = new StockExchange {
-                    StockId = StockElement.Id,
-                    ExchangeType = ExchangeType.Insert,
-                    Quantity = 1,
-                    State = State.Finished,
-                    RequiredOnTime = (int)Context.TimePeriod,
-                    Time = (int)Context.TimePeriod
+            var stockExchange = new StockExchange
+            {
+                StockId = StockElement.Id,
+                ExchangeType = ExchangeType.Insert,
+                Quantity = 1,
+                State = State.Finished,
+                RequiredOnTime = (int)Context.TimePeriod,
+                Time = (int)Context.TimePeriod
             };
             StockElement.StockExchanges.Add(stockExchange);
 
@@ -122,7 +125,7 @@ namespace Master40.Agents.Agents
                 CreateAndEnqueueInstuction(methodName: DispoAgent.InstuctionsMethods.RequestProvided.ToString(),
                                         objectToProcess: requestProvidable, // may needs later a more complex answer for now just remove item from stock
                                         targetAgent: requestProvidable.Requester); // its Source Agent becaus this message is the Answer to the Instruction set.
-                
+
                 // Remove from Requester List.
                 this.RequestedItems.Remove(requestProvidable);
 
@@ -153,18 +156,25 @@ namespace Master40.Agents.Agents
 
             // no Items to be served.
             if (!RequestedItems.Any()) return;
-            
+
             // Try server all Nonserved Items.
             foreach (var request in RequestedItems.OrderBy(x => x.DueTime).ToList()) // .Where( x => x.DueTime <= Context.TimePeriod))
             {
-                var item = StockElement.StockExchanges.FirstOrDefault(x => x.TrakingGuid == request.StockExchangeId);
-                if (item != null) { item.State = State.Finished; item.Time = (int)Context.TimePeriod; }
-                else throw new Exception("No StockExchange found");
-                CreateAndEnqueueInstuction(methodName: DispoAgent.InstuctionsMethods.RequestProvided.ToString(),
-                                                objectToProcess: request,
-                                                targetAgent: request.Requester /*, 
+                if (StockElement.Current > request.Quantity)
+                {
+                    var item = StockElement.StockExchanges.FirstOrDefault(x => x.TrakingGuid == request.StockExchangeId);
+                    if (item != null) { item.State = State.Finished; item.Time = (int)Context.TimePeriod; }
+                    else throw new Exception("No StockExchange found");
+                    CreateAndEnqueueInstuction(methodName: DispoAgent.InstuctionsMethods.RequestProvided.ToString(),
+                                                    objectToProcess: request,
+                                                    targetAgent: request.Requester /*, 
                                                     waitFor: request.DueTime */ );
-                RequestedItems.Remove(request);
+                    RequestedItems.Remove(request);
+                }
+                else
+                {
+                    CheckToPurchase(request);
+                }
             }
         }
 
@@ -176,25 +186,17 @@ namespace Master40.Agents.Agents
         /// <returns></returns>
         private StockReservation MakeReservationFor(RequestItem request)
         {
-            request.StockExchangeId =  Guid.NewGuid();
+            request.StockExchangeId = Guid.NewGuid();
             StockReservation stockReservation = new StockReservation { DueTime = request.DueTime };
 
             var withdrawl = StockElement.StockExchanges
-                                .Where(x => x.RequiredOnTime <= request.DueTime &&
-                                            x.State != State.Finished &&
-                                            x.ExchangeType == ExchangeType.Withdrawal)
-                                .Sum(x => x.Quantity);
-            // Element is NOT in Stock
-            // Create Order if Required.
-            var purchaseOpen = StockElement.StockExchanges
-                .Any(x => x.State != State.Finished && x.ExchangeType == ExchangeType.Insert);
-            var min = ((StockElement.Current - withdrawl - request.Quantity) < StockElement.Min);
-            if (min && StockElement.Article.ToPurchase && !purchaseOpen)
-            {
-                CreatePurchase();
-                DebugMessage(" Created purchase for " + this.StockElement.Article.Name);
-            }
+                               .Where(x => x.RequiredOnTime <= request.DueTime &&
+                                           x.State != State.Finished &&
+                                           x.ExchangeType == ExchangeType.Withdrawal)
+                               .Sum(x => x.Quantity);
 
+            CheckToPurchase(request);
+            
             //if ((StockElement.Current + insert - withdrawl - request.Quantity) < 0)
             if ((StockElement.Current - withdrawl - request.Quantity) < 0)
             {
@@ -207,8 +209,6 @@ namespace Master40.Agents.Agents
                 stockReservation.Quantity = request.Quantity;
                 StockElement.Current -= request.Quantity;
             }
-            
-            
             //Create Reservation
             StockElement.StockExchanges.Add(
                 new StockExchange
@@ -264,5 +264,75 @@ namespace Master40.Agents.Agents
             else throw new Exception("No StockExchange found");
         }
 
+        private void CheckToPurchase(RequestItem request)
+        {
+            var withdrawl = StockElement.StockExchanges
+                               .Where(x => x.RequiredOnTime <= request.DueTime &&
+                                           x.State != State.Finished &&
+                                           x.ExchangeType == ExchangeType.Withdrawal)
+                               .Sum(x => x.Quantity);
+            // Element is NOT in Stock
+            // Create Order if Required.
+            var purchased = StockElement.StockExchanges
+                               .Where(x => x.State != State.Finished &&
+                                           x.ExchangeType == ExchangeType.Insert)
+                               .Sum(x => x.Quantity);
+            //If Stock after withdrawl and with Purchased is still not enough
+            var total = ((StockElement.Current + purchased - withdrawl - request.Quantity) < 0);
+            //If Stock after withdrawl and request lower than Min
+            var min = ((StockElement.Current + purchased - withdrawl - request.Quantity) < StockElement.Min);
+            if (min && StockElement.Article.ToPurchase | total && StockElement.Article.ToPurchase)
+            {
+                CreatePurchase();
+                DebugMessage(" Created purchase for " + this.StockElement.Article.Name);
+            }
+        }
+
+        /*
+        private void AddArticleToItemsInProduction(InstructionSet instructionSet)
+        {
+            var request = instructionSet.ObjectToProcess as Article;
+
+
+        }
+
+        private void CreateOrUpdateProductionSet(InstructionSet instructionSet)
+        {
+            DebugMessage(" CreateorUpdateProductionSet for Article " + StockElement.Name + " from Stock Agent ->" + instructionSet.SourceAgent.Name);
+
+            var requestItem = instructionSet.ObjectToProcess as RequestItem;
+            if (requestItem == null)
+                throw new InvalidCastException("Cast to Request Item Failed");
+
+            Guid productionSetId = Guid.Empty;
+
+            //prüfe ob noch platz in einer Liste, wenn kein platz mehr oder keien Liste exisitert ansonsten erstelle eine und nimm die neue id
+            if (productionSets.Count >= 0)
+            {
+                //erstelle neues Element
+                foreach (ProductionSet productionlist in productionSets)
+                {
+                    if (productionlist.ProductionList.Count < simulationConfiguration.Lotsize - 1)
+                    {
+                        DebugMessage("Add Articel to ProductionList");
+                        productionSetId = productionlist.ProductionSetId;
+                        break;
+                    }
+                }
+            }
+
+            if (productionSetId == Guid.Empty)
+            {
+                ProductionSet productionSet = new ProductionSet(requestItem.Article);
+                productionSetId = productionSet.ProductionSetId;
+                productionSets.Add(productionSet);
+                DebugMessage("productionSet mit der Id " + productionSet.ProductionSetId.ToString() + " erstellt und hinzugefügt");
+            }
+
+            productionSets.SingleOrDefault(x => x.ProductionSetId == productionSetId).ProductionList.Add(requestItem);
+
+        }
+    */
     }
+
 }

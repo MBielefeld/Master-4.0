@@ -41,7 +41,7 @@ namespace Master40.XUnitTest.Moc
 
         public void EndSimulation(string msg, string simId, string simNumber)
         {
-            throw new System.NotImplementedException();
+           // throw new System.NotImplementedException();
         }
     }
 

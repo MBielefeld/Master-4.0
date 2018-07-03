@@ -12,13 +12,16 @@ namespace Master40.Agents.Agents
     public class ProductionAgent : Agent
     {
         private RequestItem RequestItem { get; } // the for this Work
+        private SimulationConfiguration simulationConfiguration { get; }
         //private List<RequestItem> RequestArtikles { get; set; }
         private List<ComunicationAgent> ComunicationAgents;
         private List<WorkItem> WorkItems { get; set; }
-        public ProductionAgent(Agent creator, string name, bool debug, RequestItem requestItem) 
+        int Lotsize { set; get; }
+        public ProductionAgent(Agent creator, string name, bool debug, RequestItem requestItem, SimulationConfiguration simConfiguration) 
             : base(creator, name, debug)
         {
             RequestItem = requestItem;
+            simulationConfiguration = simConfiguration;
             //RequestArtikles = new List<RequestItem>();
             ComunicationAgents = new List<ComunicationAgent>();
             DebugMessage("Woke up. My dueTime is :" + requestItem.DueTime);
@@ -43,7 +46,8 @@ namespace Master40.Agents.Agents
             }
             
             // if item hase Workschedules Request ComClient for them
-            if (RequestItem.Article.WorkSchedules != null) { 
+            if (RequestItem.Article.WorkSchedules != null) {
+                
                 // Ask the Directory Agent for Service
                 RequestComunicationAgentFor(workSchedules: RequestItem.Article.WorkSchedules);
                 // And Create workItems
@@ -66,7 +70,8 @@ namespace Master40.Agents.Agents
                                                 system: ((StorageAgent)Creator).Creator,
                                                 name: RequestItem.Article.Name + " Child of(" + this.Name + ")",
                                                 debug: DebugThis,
-                                                requestItem: item);
+                                                requestItem: item,
+                                                simConfiguration: simulationConfiguration);
                 // add to childs
                 ChildAgents.Add(dispoAgent);
                 //RequestMaterials.Add(item);
@@ -82,7 +87,7 @@ namespace Master40.Agents.Agents
                 return;
 
             // Return from Production as WorkItemStatus
-            var status = instructionSet.ObjectToProcess as WorkItemStatus;
+            var status = instructionSet.ObjectToProcess as Model.WorkItemStatus;
             if (status != null)
             {
                 var workItem = WorkItems.First(x => x.Id == status.WorkItemId);
@@ -90,8 +95,12 @@ namespace Master40.Agents.Agents
             }
 
             // TODO Anything ?
+            
+            // Check Lotsize
             if (RequestItem.Article.WorkSchedules != null && WorkItems.All(x => x.Status == Status.Finished)) {
                 this.Status = Status.Finished;
+
+                
                 CreateAndEnqueueInstuction(methodName: StorageAgent.InstuctionsMethods.ResponseFromProduction.ToString(),
                                       objectToProcess: this,
                                           targetAgent: this.Creator); // Has been injected by Dispo and is Storage
@@ -161,8 +170,7 @@ namespace Master40.Agents.Agents
                     //                                  processDuration: workSchedule.Duration, 
                     //                                       processDue: lastdue)
                 };
-               
-
+                
                 DebugMessage("Created WorkItem: " + workSchedule.Name + " | Due:" + lastdue + " | Status: " + n.Status);
                 lastdue = lastdue - workSchedule.Duration;
                 firstItemToBuild = false;
@@ -195,7 +203,7 @@ namespace Master40.Agents.Agents
             nextItem.Status = Status.Ready;
             nextItem.WasSetReady = true;
             // create StatusMsg
-            var message = new WorkItemStatus
+            var message = new Model.WorkItemStatus
             {
                 WorkItemId = nextItem.Id,
                 CurrentPriority = nextItem.Priority(Context.TimePeriod),  // TODO MAY NEED TO RECALCULATE IN FUTURE
@@ -239,6 +247,7 @@ namespace Master40.Agents.Agents
             }
             
         }
+        
 
     }
 }

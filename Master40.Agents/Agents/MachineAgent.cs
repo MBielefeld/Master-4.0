@@ -12,13 +12,13 @@ namespace Master40.Agents.Agents
 {
     public class MachineAgent : Agent
     {
-
         // Agent to register your Services
         private readonly DirectoryAgent _directoryAgent;
         private ComunicationAgent _comunicationAgent;
         private Machine Machine { get; }
+        private MachineTool MachineTool { get; set; }
         private int ProgressQueueSize { get; }
-        public List<WorkItem> Queue { get; }
+        public WorkItemList<WorkItem> Queue { get; }
         //private Queue<WorkItem> SchduledQueue;
         private LimitedQueue<WorkItem> ProcessingQueue { get; }
         /// <summary>
@@ -26,7 +26,9 @@ namespace Master40.Agents.Agents
         /// </summary>
         private int QueueLength { get; }
         private bool ItemsInProgess { get; set; }
-        private WorkTimeGenerator WorkTimeGenerator { get; }
+        private SimulationConfiguration simulationConfiguration { get; }
+        private TimeGenerator WorkTimeGenerator { get; }
+        private TimeGenerator SetupTimeGenerator { get; }
 
         public enum InstuctionsMethods
         {
@@ -34,21 +36,25 @@ namespace Master40.Agents.Agents
             RequestProposal,
             AcknowledgeProposal,
             StartWorkWith,
+            StartWork,
+            SetupMachine,
             DoWork,
             FinishWork
         }
 
-        public MachineAgent(Agent creator, string name, bool debug, DirectoryAgent directoryAgent, Machine machine, WorkTimeGenerator workTimeGenerator) : base(creator, name, debug)
+        public MachineAgent(Agent creator, string name, bool debug, DirectoryAgent directoryAgent, Machine machine, TimeGenerator workTimeGenerator, TimeGenerator setupTimeGenerator, SimulationConfiguration simConfiguration) : base(creator, name, debug)
         {
             _directoryAgent = directoryAgent;
             ProgressQueueSize = 1; // TODO COULD MOVE TO MODEL for CONFIGURATION, May not required anymore
-            Queue = new List<WorkItem>();  // ThenBy( x => x.Status)
+            Queue = new WorkItemList<WorkItem>();  // ThenBy( x => x.Status)
             ProcessingQueue = new LimitedQueue<WorkItem>(1);
             Machine = machine;
             WorkTimeGenerator = workTimeGenerator;
+            SetupTimeGenerator = setupTimeGenerator;
+            simulationConfiguration = simConfiguration;
             ItemsInProgess = false;
             RegisterService();
-            QueueLength = 45; // plaing forecast
+            QueueLength = 120; // plaing forecast
         }
 
 
@@ -94,7 +100,7 @@ namespace Master40.Agents.Agents
                 throw new InvalidCastException("Could not Cast Workitem on InstructionSet.ObjectToProcess");
          
             // debug
-            DebugMessage("Request for Proposal");
+            DebugMessage("Request for Proposal for: " + workItem.WorkSchedule.Article.Name + " at Machine: " + this.Name);
             // Send
             SendProposalTo(instructionSet.SourceAgent, workItem);
         }
@@ -108,11 +114,21 @@ namespace Master40.Agents.Agents
         private void SendProposalTo(Agent targetAgent, WorkItem workItem)
         {
             var max = 0;
-            if(Queue.Any(e => e.Priority(Context.TimePeriod) <= workItem.Priority(Context.TimePeriod)))
+
+            //Add SetuopTime to Proposal if Setup is needed
+            long setupTime = 0;
+            if (this.Machine.MachineTool == null || this.Machine.MachineTool.Name != workItem.WorkSchedule.MachineTool.Name)
             {
-                max = Queue.Where(e => e.Priority(Context.TimePeriod) <= workItem.Priority(Context.TimePeriod)).Max(e => e.EstimatedEnd);
+                setupTime = workItem.WorkSchedule.MachineTool.SetupTime;
+                //DebugMessage("Machine need to setup " + setupTime + " for WorkItem in Proposal");
+                workItem.Priority(Context.TimePeriod, setupTime);
             }
 
+            if (Queue.Any(e => e.Priority(Context.TimePeriod) <= workItem.Priority(Context.TimePeriod)))
+            {
+                 max =  Queue.Where(e => e.Priority(Context.TimePeriod) <= workItem.Priority(Context.TimePeriod)).Max(e => e.EstimatedEnd);
+            }
+            
             // calculat Proposal.
             var proposal = new Proposal
             {
@@ -178,7 +194,8 @@ namespace Master40.Agents.Agents
                 UpdateProcessingQueue(workItem);
 
                 // there is at least Something Ready so Start Work
-                DoWork(new InstructionSet());
+                StartWork(new InstructionSet());
+                
             }
         }
 
@@ -202,7 +219,7 @@ namespace Master40.Agents.Agents
 
         private void StartWorkWith(InstructionSet instructionSet)
         {
-            var workItemStatus = instructionSet.ObjectToProcess as WorkItemStatus;
+            var workItemStatus = instructionSet.ObjectToProcess as Model.WorkItemStatus;
             if (workItemStatus == null)
             {
                 throw new InvalidCastException("Could not Cast >WorkItemStatus< on InstructionSet.ObjectToProcess");
@@ -219,7 +236,7 @@ namespace Master40.Agents.Agents
                 UpdateProcessingQueue(workItem);
                 
                 // there is at least Something Ready so Start Work
-                DoWork(new InstructionSet());
+                StartWork(new InstructionSet());
             }
         }
 
@@ -235,8 +252,9 @@ namespace Master40.Agents.Agents
             }
         }
 
-        private void DoWork(InstructionSet instructionSet)
+        private void StartWork(InstructionSet instructionSet)
         {
+            DebugMessage("StartWork");
             if (ItemsInProgess) { 
                 DebugMessage("Im still working....");
                 return; // still working
@@ -253,23 +271,70 @@ namespace Master40.Agents.Agents
                 DebugMessage("Nothing more Ready in Queue!");
                 return;
             }
-            
-            DebugMessage("Start With " +  item.WorkSchedule.Name);
+
+            DebugMessage("Start With " + item.WorkSchedule.Name);
             ItemsInProgess = true;
             item.Status = Status.Processed;
 
+            //SetupMachine
+            int setupDuration = 0;
+            if (this.Machine.MachineTool== null || this.Machine.MachineTool.Name != item.WorkSchedule.MachineTool.Name) {
 
+                setupDuration = SetupTimeGenerator.GetRandomWorkTime(item.WorkSchedule.MachineTool.SetupTime);
+                this.Machine.MachineTool = item.WorkSchedule.MachineTool;
+                DebugMessage("MachineTool for machine " + this.Machine.Name + " successfull: new MachineTool setuptime is " + item.WorkSchedule.MachineTool.SetupTime.ToString() );
+                item.SetupDuration = setupDuration;
+               
+            } else
+            {
+                DebugMessage("MachineTool for machine " + this.Machine.Name + " already equippded");
+            };
+
+            Statistics.UpdateSimulationWorkScheduleSetup(item.Id.ToString(), (int)Context.TimePeriod, item.SetupDuration - 1, this.Machine);
+
+            CreateAndEnqueueInstuction(methodName: MachineAgent.InstuctionsMethods.SetupMachine.ToString(),
+                                      objectToProcess: item,
+                                          targetAgent: this,
+                                              waitFor: setupDuration);
+
+        }
+        
+        private void SetupMachine(InstructionSet instructionSet)
+        {
+            var item = instructionSet.ObjectToProcess as WorkItem;
+            if (item == null)
+            {
+                throw new InvalidCastException("Could not Cast >Machine< on InstructionSet.ObjectToProcess");
+            }
+            
+            CreateAndEnqueueInstuction(methodName: MachineAgent.InstuctionsMethods.DoWork.ToString(),
+                                      objectToProcess: item,
+                                          targetAgent: this);
+
+        }
+
+        private void DoWork(InstructionSet instructionSet)
+        {
+            var item = instructionSet.ObjectToProcess as WorkItem;
+            if (item == null)
+            {
+                throw new InvalidCastException("Could not Cast >WorkItemStatus< on InstructionSet.ObjectToProcess");
+            }
+            
             // TODO: Roll delay here
             var duration = WorkTimeGenerator.GetRandomWorkTime(item.WorkSchedule.Duration);
 
-            //Debug.WriteLine("Duration: " + duration + " for " + item.WorkSchedule.Name);
+            //add Duration to WorkItem for further analysis 
+            item.Duration = duration;
             Statistics.UpdateSimulationWorkSchedule(item.Id.ToString(), (int)Context.TimePeriod, duration - 1, this.Machine);
-            
+
             // get item = ready and lowest priority
+            DebugMessage("CreateAndEnqueue von FinishWork");
             CreateAndEnqueueInstuction(methodName: MachineAgent.InstuctionsMethods.FinishWork.ToString(),
                                   objectToProcess: item,
                                       targetAgent: this,
                                           waitFor: duration);
+
         }
 
         private void FinishWork(InstructionSet instructionSet)
@@ -280,6 +345,11 @@ namespace Master40.Agents.Agents
                 throw new InvalidCastException("Could not Cast >WorkItemStatus< on InstructionSet.ObjectToProcess");
             }
 
+            DebugMessage("FinishWork");
+
+            //Output Queue Status
+            Queue.reportAllWorkItemsByStatus(this, (int) Context.TimePeriod);
+            
             // Set next Ready Element from Queue
             var itemFromQueue = Queue.Where(x => x.Status == Status.Ready).OrderBy(x => x.Priority(Context.TimePeriod)).FirstOrDefault();
             UpdateProcessingQueue(itemFromQueue);
@@ -290,20 +360,30 @@ namespace Master40.Agents.Agents
 
             // Call Comunication Agent that item has ben processed.
             CreateAndEnqueueInstuction(methodName: ComunicationAgent.InstuctionsMethods.FinishWorkItem.ToString(),
-                                  objectToProcess: new WorkItemStatus { CurrentPriority = 0,
+                                  objectToProcess: new Model.WorkItemStatus { CurrentPriority = 0,
                                                                         Status = Status.Finished,
                                                                         WorkItemId = item.Id },
                                       targetAgent: item.ComunicationAgent);
 
             // Reorganize List
-            CallToReQueue(Queue.Where(x => x.Status == Status.Created || x.Status == Status.InQueue).ToList());
+
+            //Requeue only if estimated time not real work time for WorkItem
+            if(item.WorkSchedule.Duration != item.Duration)
+            {
+                DebugMessage("Do CallToReQueue for " + item.WorkSchedule.Article.Name +": EstimatedDuration: " + item.WorkSchedule.Duration + " to Duration: " + item.Duration);
+                CallToReQueue(Queue.Where(x => x.Status == Status.Created || x.Status == Status.InQueue).ToList());
+            }
+            else
+            {
+                DebugMessage("Skip CallToReQueue for " + item.WorkSchedule.Article.Name + ": EstimatedDuration: " + item.WorkSchedule.Duration + " to Duration: " + item.Duration);
+            }
             // do Do Work in next Timestep.
-            CreateAndEnqueueInstuction(methodName: InstuctionsMethods.DoWork.ToString(),
+            CreateAndEnqueueInstuction(methodName: InstuctionsMethods.StartWork.ToString(),
                                   objectToProcess: new InstructionSet(),
                                       targetAgent: this );//,
                                          // waitFor: 1);
             //DoWork(new InstructionSet());
         }
-
+        
     }
 }

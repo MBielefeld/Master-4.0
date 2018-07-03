@@ -9,6 +9,7 @@ namespace Master40.Agents.Agents.Internal
 {
     public static class Statistics
     {
+
         public static void CreateSimulationWorkSchedule(WorkItem ws, string orderId, bool isHeadDemand)
         {
             var sws = new SimulationWorkschedule
@@ -21,7 +22,7 @@ namespace Master40.Agents.Agents.Internal
                 SimulationConfigurationId = -1,
                 OrderId = "[" + orderId + "]",
                 HierarchyNumber = ws.WorkSchedule.HierarchyNumber,
-                ProductionOrderId = "["+ ws.ProductionAgent.AgentId.ToString() + "]",
+                ProductionOrderId = "[" + ws.ProductionAgent.AgentId.ToString() + "]",
                 Parent = isHeadDemand.ToString()
             };
             AgentSimulation.SimulationWorkschedules.Add(sws);
@@ -32,7 +33,14 @@ namespace Master40.Agents.Agents.Internal
         {
             var edit = AgentSimulation.SimulationWorkschedules.FirstOrDefault(x => x.WorkScheduleId.Equals(workScheduleId));
             edit.Start = start;
-            edit.End = start + duration + 1; // to have Time Points instead of Time Periods
+            edit.End = start + duration + 1; // to have Time Points instead of Time Periods (original +1)
+            edit.Machine = machine.Name;
+        }
+        public static void UpdateSimulationWorkScheduleSetup(string workScheduleId, int start, int setupDuration, Machine machine)
+        {
+            var edit = AgentSimulation.SimulationWorkschedules.FirstOrDefault(x => x.WorkScheduleId.Equals(workScheduleId));
+            edit.setupStart = start;
+            edit.setupEnd = start + setupDuration + 1;
             edit.Machine = machine.Name;
         }
 
@@ -48,6 +56,35 @@ namespace Master40.Agents.Agents.Internal
             }
         }
 
+        public static List<Kpi> CreateKpisFromListStatus(List<ListStatus> listStatus, int simulationId, SimulationType simluationType, int simNumber)
+        {
+            List<Kpi> kpiList = new List<Kpi>();
+
+            if (listStatus != null)
+            {
+                foreach (ListStatus ls in listStatus)
+                {
+
+                    kpiList.Add(new Kpi()
+                    {
+                        Name = ls.Agent.Name,
+                        Value = ls.Count,
+                        ValueMin = 0,
+                        ValueMax = 1000,
+                        IsKpi = true,
+                        Status = ls.Status.ToString(),
+                        KpiType = KpiType.WorkItemListStatus,
+                        SimulationConfigurationId = simulationId,
+                        SimulationType = simluationType,
+                        SimulationNumber = simNumber,
+                        Time = ls.Time,
+                        IsFinal = true
+                    });
+                }
+            }
+            return kpiList;
+        }
+
         internal static void UpdateSimulationWorkSchedule(List<Guid> productionAgents, Agent requesterAgent, int orderId)
         {
             foreach (var agentId in productionAgents)
@@ -55,12 +92,12 @@ namespace Master40.Agents.Agents.Internal
                 var items = AgentSimulation.SimulationWorkschedules.Where(x => x.ProductionOrderId.Equals("[" + agentId.ToString() + "]"));
                 foreach (var item in items)
                 {
-                    item.ParentId = item.Parent.Equals(false.ToString()) ? "[" + requesterAgent.Creator.AgentId.ToString() +"]" : "[]";
-                    item.Parent =  requesterAgent.Creator.Name;
+                    item.ParentId = item.Parent.Equals(false.ToString()) ? "[" + requesterAgent.Creator.AgentId.ToString() + "]" : "[]";
+                    item.Parent = requesterAgent.Creator.Name;
                     item.CreatedForOrderId = item.OrderId;
                     item.OrderId = "[" + orderId + "]";
 
-                   // item.OrderId = orderId;
+                    // item.OrderId = orderId;
                 }
             }
 

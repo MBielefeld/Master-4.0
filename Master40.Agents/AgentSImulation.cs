@@ -21,7 +21,7 @@ namespace Master40.Agents
     {
         private readonly ProductionDomainContext _productionDomainContext;
         public static List<SimulationWorkschedule> SimulationWorkschedules;
-
+        public static List<ListStatus> ListStatuses;
         private IMessageHub _messageHub;
 
         public AgentSimulation(ProductionDomainContext productionDomainContext, IMessageHub messageHub)
@@ -29,6 +29,7 @@ namespace Master40.Agents
             _productionDomainContext = productionDomainContext;
             _messageHub = messageHub;
             SimulationWorkschedules = new List<SimulationWorkschedule>();
+            ListStatuses = new List<ListStatus>();
         }
 
         public async Task<List<AgentStatistic>> RunSim(int simulationId, int simulationNumber)
@@ -55,6 +56,10 @@ namespace Master40.Agents
 
                 var simulationNr = _productionDomainContext.GetSimulationNumber(simulationId, SimulationType.Decentral);
                 Statistics.UpdateSimulationId(simulationId, SimulationType.Decentral, simulationNumber);
+                //Update KPI Context
+                List<Kpi> ListStatusKpis = Statistics.CreateKpisFromListStatus(ListStatuses, simulationId, SimulationType.Decentral, simulationNumber);
+                _productionDomainContext.Kpis.AddRange(ListStatusKpis);
+
                 _productionDomainContext.SimulationWorkschedules.AddRange(SimulationWorkschedules);
                 _productionDomainContext.SaveChanges();
                 SaveStockExchanges(simulationId, simulationNr, context);
@@ -70,7 +75,7 @@ namespace Master40.Agents
             //context.Register(new SimulationEndTrigger(() => (context.TimePeriod > simConfig.SimulationEndTime)));
 
             var system = new SystemAgent(null, "System", true, _productionDomainContext, _messageHub, simConfig);
-            var randomWorkTime = new WorkTimeGenerator(simConfig.Seed, simConfig.WorkTimeDeviation, simNr);
+            var randomWorkTime = new TimeGenerator(simConfig.Seed, simConfig.WorkTimeDeviation, simNr);
             // Create Directory Agent,
             var directoryAgent = new DirectoryAgent(system, "Directory", true);
             system.ChildAgents.Add(directoryAgent);
@@ -78,12 +83,15 @@ namespace Master40.Agents
             // Create Machine Agents
             foreach (var machine in _productionDomainContext.Machines.Include(m => m.MachineGroup))
             {
-                system.ChildAgents.Add(new MachineAgent(creator: system, 
-                                                           name: "Machine: " + machine.Name, 
-                                                          debug: true, 
+                system.ChildAgents.Add(new MachineAgent(creator: system,
+                                                           name: "Machine: " + machine.Name,
+                                                          debug: true,
                                                  directoryAgent: directoryAgent,
                                                         machine: machine,
-                                              workTimeGenerator: randomWorkTime)); 
+                                                        simConfiguration: simConfig,
+                                                 workTimeGenerator: randomWorkTime,
+                                                 setupTimeGenerator: randomWorkTime
+                                              )); 
             }
 
             // Create Stock Agents
@@ -95,7 +103,8 @@ namespace Master40.Agents
                 system.ChildAgents.Add(new StorageAgent(creator: system, 
                                                            name: stock.Name, 
                                                           debug: true, 
-                                                   stockElement: stock ));
+                                                   stockElement: stock,
+                                                   simConfiguration: simConfig));
             }
 
             await system.PrepareAgents(simConfig, simNr);
@@ -153,7 +162,7 @@ namespace Master40.Agents
                                  .Where(x => x.ExchangeType == ExchangeType.Withdrawal).Sum(x => x.Quantity));
                 Debug.WriteLine("Storage (" + item.Name + "): In: " + count);
             }
-           
+            
         }
 
         private void SaveStockExchanges(int simId, int simNr, SimulationContext context)

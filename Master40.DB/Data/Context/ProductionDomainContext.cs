@@ -198,7 +198,7 @@ namespace Master40.DB.Data.Context
                         .Join(demandboms, c => c.DemandRequesterId, d => d.Id, (c, d) => c)).ToList();
 
                     // get ProductionOrderWorkSchedule for 
-                    var pows = ProductionOrderWorkSchedules.Include(x => x.ProductionOrder).Include(x => x.Machine).Include(x => x.MachineGroup).AsNoTracking();
+                    var pows = ProductionOrderWorkSchedules.Include(x => x.ProductionOrder).Include(x => x.Machine).Include(x => x.MachineGroup).Include(x => x.MachineTool).AsNoTracking();
                     var powDetails = pows.Join(demandProviders, p => p.ProductionOrderId, dp => dp.ProductionOrderId,
                         (p, dp) => p).ToList();
 
@@ -256,6 +256,8 @@ namespace Master40.DB.Data.Context
                         .ThenInclude(x => x.MachineGroup)
                         .Include(x => x.ProductionOrderWorkSchedule)
                         .ThenInclude(x => x.Machine)
+                        .Include(x => x.ProductionOrderWorkSchedule)
+                        .ThenInclude(x => x.MachineTool)
                         .Include(x => x.ProductionOrderBoms)
                         .ThenInclude(x => x.DemandProductionOrderBoms)
                         .ThenInclude(x => x.DemandProvider)
@@ -548,6 +550,8 @@ namespace Master40.DB.Data.Context
         {
             if (parentProductionOrder == null) return null;
             var lotsize = SimulationConfigurations.Single(a => a.Id == simulationId).Lotsize;
+            System.Diagnostics.Debug.WriteLine(lotsize);
+            
             var quantity = demand.Quantity > lotsize ? lotsize : demand.Quantity;
             var pob = new ProductionOrderBom()
             {

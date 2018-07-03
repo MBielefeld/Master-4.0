@@ -11,6 +11,8 @@ namespace Master40.DB.Models
         public string ImageUrl { get; set; }
         public int Stage { get; set; }
         [JsonIgnore]
+        public virtual ICollection<MachineTool> MachineTools { get; set; }
+        [JsonIgnore]
         public virtual ICollection<ProductionOrderWorkSchedule> ProductionOrderWorkSchedules { get; set; }
         [JsonIgnore]
         public virtual ICollection<Machine> Machines  { get; set; }

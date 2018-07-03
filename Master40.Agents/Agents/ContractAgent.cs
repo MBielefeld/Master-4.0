@@ -11,13 +11,14 @@ namespace Master40.Agents.Agents
     public class ContractAgent : Agent
     {
         private RequestItem requestItem;
+        private SimulationConfiguration simulationConfiguration;
 
-        public ContractAgent(Agent creator, string name, bool debug) : base(creator, name, debug)
+        public ContractAgent(Agent creator, string name, bool debug, SimulationConfiguration simConfiguration) : base(creator, name, debug)
         {
             //Instructions.Add(new Instruction{ Method = "StartOrder", ExpectedObjecType = typeof(RequestItem) });
+            simulationConfiguration = simConfiguration;
         }
-
-
+        
 
         public enum InstuctionsMethods
         {
@@ -38,12 +39,15 @@ namespace Master40.Agents.Agents
             // create Request Item
             requestItem = MapPropertiesToRequestItem(orderItem);
 
+
             // Create Dispo Agent 
-            var dispoAgent = new DispoAgent(creator: this, 
-                                             system: Creator, 
-                                               name: requestItem.Article.Name + " OrderPartId(" + orderItem.Id + ")", 
-                                              debug: DebugThis, 
-                                        requestItem: requestItem);
+            var dispoAgent = new DispoAgent(creator: this,
+                                             system: Creator,
+                                               name: requestItem.Article.Name + " OrderPartId(" + orderItem.Id + ")",
+                                              debug: DebugThis,
+                                        requestItem: requestItem,
+                                       simConfiguration: simulationConfiguration
+                                        );
 
             ChildAgents.Add(dispoAgent);
         }
@@ -66,6 +70,7 @@ namespace Master40.Agents.Agents
             if (ChildAgents.Any(x => x.Status != Status.Finished)) return;
             // else
             // Call Finish
+            DebugMessage("Meldung");
             Debug.WriteLine("Order Finished at:" + Context.TimePeriod);
             CreateAndEnqueueInstuction(methodName: SystemAgent.InstuctionsMethods.OrderProvided.ToString(),
                 objectToProcess: requestItem,

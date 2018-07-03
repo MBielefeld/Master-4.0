@@ -41,10 +41,9 @@ namespace Master40.XUnitTest.DBContext
             //_ctx.Database.EnsureDeleted();
             //MasterDBInitializerLarge.DbInitialize(_ctx);
             //MasterDBInitializerSmall.DbInitialize(_ctx);
-            //_productionDomainContext.Database.EnsureDeleted();
-            //_productionDomainContext.Database.EnsureCreated();
-            //MasterDBInitializerLarge.DbInitialize(_productionDomainContext);
-
+            _productionDomainContext.Database.EnsureDeleted();
+            _productionDomainContext.Database.EnsureCreated();
+            MasterDBInitializerBasic.DbInitialize(_productionDomainContext);
         }
 
         /// <summary>
@@ -67,40 +66,18 @@ namespace Master40.XUnitTest.DBContext
             await simulation.Simulate(1);
             Assert.Equal(true, _productionDomainContext.Kpis.Any());
         }
-
+        */
         //public DemandToProvider getRequester
         [Fact]
         public async Task AgentSimulationTestAsync()
         {
-
-            // In-memory database only exists while the connection is open
-            var connectionStringBuilder = new SqliteConnectionStringBuilder { DataSource = ":memory:" };
-            var connection = new SqliteConnection(connectionStringBuilder.ToString());
-
-            // create OptionsBuilder with InMemmory Context
-            var builder = new DbContextOptionsBuilder<MasterDBContext>();
-            builder.UseSqlite(connection);
-
-
-            using (var c = new InMemoryContext(builder.Options))
-            {
-                c.Database.OpenConnection();
-                c.Database.EnsureCreated();
-                InMemoryContext.LoadData(_productionDomainContext, c);
-
-                var sim = new AgentSimulation(c, new Moc.MessageHub());
-                await sim.RunSim(1,1);
-
-                CalculateKpis.CalculateAllKpis(c, 1, DB.Enums.SimulationType.Decentral, 
-                                                    _productionDomainContext.GetSimulationNumber(1, DB.Enums.SimulationType.Decentral),true, int.MaxValue);
-                CopyResults.Copy(c, _productionDomainContext);
-            }
-            connection.Close();
+            var simulator = new Simulator(_productionDomainContext, new Moc.MessageHub());
+            await simulator.AgentSimulatioAsync(1);
 
             Assert.Equal(_productionDomainContext.Kpis.Any(), true);
         }
 
-
+        /*
         [Fact]
         public async Task MrpInMemmoryTest()
         {            
@@ -187,10 +164,10 @@ namespace Master40.XUnitTest.DBContext
             Assert.Equal(1, context.SimulationConfigurations.Count());
         }
         */
-        
-        [Theory]
+
+        //[Theory]
         //[InlineData(SimulationType.Decentral, 5)]
-        [InlineData(SimulationType.Decentral, 1)]
+        //[InlineData(SimulationType.Decentral, 1)]
         //[InlineData(SimulationType.Decentral, 2)]
         //[InlineData(SimulationType.Decentral, 3)]
         //[InlineData(SimulationType.Central, 6)]
@@ -198,6 +175,7 @@ namespace Master40.XUnitTest.DBContext
         // [InlineData(SimulationType.Central, 5)]
         // [InlineData(SimulationType.Central, 6)]
         // [InlineData(SimulationType.Central, 7)]
+        /*
         public async Task TestKpiCalculation(SimulationType simType, int simId)
         {
              var toRemove = await _productionDomainContext.Kpis.Where(x => x.SimulationType == simType
@@ -213,7 +191,7 @@ namespace Master40.XUnitTest.DBContext
                                              , 1
                                              , true
                                              , 130);
-
+                                             
            //  var toRemove2 = await _productionDomainContext.Kpis.Where(x => x.SimulationType == simType
            //                                                                && x.SimulationConfigurationId == simId
            //                                                                && x.KpiType == KpiType.StockEvolution)
@@ -241,7 +219,7 @@ namespace Master40.XUnitTest.DBContext
 
         }
 
-        
+        */
     
     /*
         [Fact]

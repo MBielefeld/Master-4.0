@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Text;
-using Master40.DB.DB.Enums;
 using Master40.DB.Enums;
 
 namespace Master40.DB.Models
