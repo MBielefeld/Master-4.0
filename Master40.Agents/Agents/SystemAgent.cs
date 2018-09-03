@@ -80,8 +80,7 @@ namespace Master40.Agents.Agents
             // Create Contract agents
             var ca = new ContractAgent(creator: this,
                 name: contract.Order.Name + " - Part:" + contract.Article.Name,
-                debug: this.DebugThis,
-                simConfiguration: _simConfig);
+                debug: this.DebugThis);
             // add To System
             this.ChildAgents.Add(ca);
 

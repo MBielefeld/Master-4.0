@@ -19,12 +19,11 @@ namespace Master40.ViewComponents
         {
             _context = context;
         }
-
-
-
+        
         public async Task<IViewComponentResult> InvokeAsync(List<string> paramsList)
         {
             Task<Chart> generateChartTask; 
+            
             if (Convert.ToInt32(paramsList[3]) == 1)
             {
                 generateChartTask = GenerateChartTaskOverTime(paramsList);
@@ -67,7 +66,8 @@ namespace Master40.ViewComponents
                                                         && x.IsFinal && x.SimulationNumber == Convert.ToInt32(paramsList[2]))
                                            .OrderByDescending(g => g.Name)
                     .ToList();
-                var data = new Data {Labels = machines.Select(n => n.Name).ToList()};
+
+                var data = new Data { Labels = machines.OrderBy(m => m.Name).GroupBy(x => x.Name).Select(k => k.First().Name).ToList() };
 
                 // create Dataset for each Lable
                 data.Datasets = new List<Dataset>();
@@ -76,30 +76,39 @@ namespace Master40.ViewComponents
                 var cc = new ChartColor();
                 
                 //var max = _context.SimulationWorkschedules.Max(x => x.End) - 1440; 
-                var barDataSet = new BarDataset {Data = new List<double>(), BackgroundColor = new List<string>(), HoverBackgroundColor = new List<string>(), YAxisID ="y-normal"};
+                var barDataSetWork = new BarDataset {Data = new List<double>(), BackgroundColor = new List<string>(), HoverBackgroundColor = new List<string>(), YAxisID= "y-normal"};
+                var barDataSetSetup = new BarDataset { Data = new List<double>(), BackgroundColor = new List<string>(), HoverBackgroundColor = new List<string>(), YAxisID = "y-normal"};
                 var barDiversityInvisSet = new BarDataset { Data = new List<double>(), BackgroundColor = new List<string>(), HoverBackgroundColor = new List<string>(), YAxisID= "y-diversity"};
                 var barDiversitySet = new BarDataset { Data = new List<double>(), BackgroundColor = new List<string>(), HoverBackgroundColor = new List<string>(), YAxisID ="y-diversity"};
-                foreach (var machine in machines)
+
+                foreach (var machine in machines.Where(x => x.Status == "Work"))
                 {
-                    var percent = Math.Round(machine.Value * 100, 2);
+                    
+                    var workPercent = Math.Round(machine.Value * 100, 2);
+                    var setupPercent = Math.Round(machines.Where(x => x.Name == machine.Name && x.Status == "Setup").Single().Value * 100, 2);
                     // var wait = max - work;
-                    barDataSet.Data.Add(percent);
-                    barDataSet.BackgroundColor.Add(cc.Color[i].Substring(0, cc.Color[i].Length - 4) + "0.4)");
-                    barDataSet.HoverBackgroundColor.Add(cc.Color[i].Substring(0, cc.Color[i].Length - 4) + "0.7)");
+                    barDataSetWork.Data.Add(workPercent);
+                    barDataSetWork.BackgroundColor.Add(cc.Color[4].Substring(0, cc.Color[4].Length - 4) + "0.4)");
+                    barDataSetWork.HoverBackgroundColor.Add(cc.Color[4].Substring(0, cc.Color[4].Length - 4) + "0.7)");
 
-                    var varianz = machine.Count * 100;
+                    barDataSetSetup.Data.Add(setupPercent);
+                    barDataSetSetup.BackgroundColor.Add(cc.Color[0].Substring(0, cc.Color[0].Length - 4) + "0.4)");
+                    barDataSetSetup.HoverBackgroundColor.Add(cc.Color[0].Substring(0, cc.Color[0].Length - 4) + "0.7)");
 
-                    barDiversityInvisSet.Data.Add(percent - Math.Round(varianz / 2, 2));
+                    var varianz = machine.Count * 100 /2;
+
+                    barDiversityInvisSet.Data.Add(workPercent + setupPercent - Math.Round(varianz / 2, 2));
                     barDiversityInvisSet.BackgroundColor.Add(ChartColor.Transparent);
                     barDiversityInvisSet.HoverBackgroundColor.Add(ChartColor.Transparent);
 
                     barDiversitySet.Data.Add(Math.Round(varianz, 2));
-                    barDiversitySet.BackgroundColor.Add(cc.Color[i].Substring(0, cc.Color[i].Length - 4) + "0.8)");
-                    barDiversitySet.HoverBackgroundColor.Add(cc.Color[i].Substring(0, cc.Color[i].Length - 4) + "1)");
+                    barDiversitySet.BackgroundColor.Add(cc.Color[1].Substring(0, cc.Color[1].Length - 4) + "0.8)");
+                    barDiversitySet.HoverBackgroundColor.Add(cc.Color[1].Substring(0, cc.Color[1].Length - 4) + "1)");
                     i++;
                 }
 
-                data.Datasets.Add(barDataSet);
+                data.Datasets.Add(barDataSetSetup);
+                data.Datasets.Add(barDataSetWork);
                 data.Datasets.Add(barDiversityInvisSet);
                 data.Datasets.Add(barDiversitySet);
                 
@@ -107,7 +116,7 @@ namespace Master40.ViewComponents
 
                 // Specifie xy Axis
                 var xAxis = new List<Scale>() { new CartesianScale { Stacked = true, Id = "x-normal", Display = true } };
-                var yAxis = new List<Scale>() 
+                var yAxis = new List<Scale>()
                 {
                     new CartesianScale { Stacked = true, Display = true, Ticks = new CartesianLinearTick { BeginAtZero = true, Min = 0, Max = 100}, Id = "y-normal" },
                     new CartesianScale {
@@ -122,7 +131,7 @@ namespace Master40.ViewComponents
                     MaintainAspectRatio = false,
                     Responsive = true,
                     Title = new Title { Text = "Machine Workloads", Position = "top", FontSize = 24, FontStyle = "bold", Display = true },
-                    Legend = new Legend { Position = "bottom", Display = false }
+                    Legend = new Legend { Position = "bottom", Display = false}
                 };
 
                 return chart;
@@ -157,19 +166,21 @@ namespace Master40.ViewComponents
                     .ToList();
                 var settlingTime = _context.SimulationConfigurations.First(x => x.Id == Convert.ToInt32(paramsList[0])).SettlingStart;
                 var machines = machinesKpi.Select(n => n.Name).Distinct().ToList();
-                var data = new Data { Labels = machines };
+                var machineNames = machinesKpi.OrderBy(m => m.Name).GroupBy(x => x.Name).Select(k => k.First().Name).ToList();
+                var data = new Data { Labels = machinesKpi.OrderBy(m => m.Name).GroupBy(x => x.Name).Select(k => k.First().Name).ToList() };
 
                 // create Dataset for each Lable
                 data.Datasets = new List<Dataset>();
 
                 var i = 0;
-                foreach (var machine in machines)
+                foreach (var machine in machineNames)
                 {
                     // add zero to start
                     var kpis = new List<LineScatterData> { new LineScatterData {  x = "0", y = "0" } };
-                    kpis.AddRange(machinesKpi.Where(x => x.Name == machine).OrderBy(x => x.Time)
-                        .Select(x => new LineScatterData { x = x.Time.ToString() , y = (x.Value * 100).ToString() }).ToList());
-
+                    
+                    kpis.AddRange(machinesKpi.Where(x => x.Name == machine && x.Status == "Work").OrderBy(x => x.Time)
+                        .Select(x => new LineScatterData { x = x.Time.ToString(), y = ((x.Value + machinesKpi.Where(y => y.Name == machine && y.Status == "Work" && x.Time == y.Time).Select(y => y.Value).FirstOrDefault()) * 100).ToString() }).ToList());
+                   
                     var lds = new LineScatterDataset()
                     {
                         Data = kpis,
@@ -183,6 +194,22 @@ namespace Master40.ViewComponents
                     };
                     data.Datasets.Add(lds);
 
+                    var setupKpis = new List<LineScatterData> { new LineScatterData { x = "0", y = "0" } };
+                    setupKpis.AddRange(machinesKpi.Where(x => x.Name == machine && x.Status == "Setup").OrderBy(x => x.Time)
+                       .Select(x => new LineScatterData { x = x.Time.ToString(), y = (machinesKpi.Where(y => y.Name == machine && y.Status == "Setup" && x.Time == y.Time).Select(y => y.Value).FirstOrDefault() * 100).ToString() }).ToList());
+
+                    var setupLds = new LineScatterDataset()
+                    {
+                        Data = setupKpis,
+                        BorderWidth = 2,
+                        Label = machine,
+                        ShowLine = true,
+                        Fill = "true",
+                        BackgroundColor = cc.Color[i],
+                        BorderColor = cc.Color[i++],
+                        LineTension = 0
+                    };
+                    data.Datasets.Add(setupLds);
                 }
 
                 data.Datasets.Add(new LineScatterDataset()

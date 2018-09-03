@@ -16,14 +16,20 @@ namespace Master40.Agents.Agents.Model
             
         }
         
-        public void reportAllWorkItemsByStatus(Agent agent, int currentTime)
+        public void CreateOrUpdateWorkItemListStatus(Agent agent, int currentTime)
         {
-            
             foreach (Status status in (Status[])Enum.GetValues(typeof(Status)))
             {
-                ListStatus liststatus = new ListStatus(agent, status, getCountOfWorkItemsByStatus(status), currentTime);
-                AgentSimulation.ListStatuses.Add(liststatus);
-                //reportMessage += status.ToString() + ": " + getCountOfWorkItemsByStatus(status) + " | ";
+                if(AgentSimulation.ListStatuses.Any(x => x.Time == currentTime && x.Agent.Equals(agent) && x.Status == status)){
+                    //Update entries
+                    AgentSimulation.ListStatuses.Where(x => x.Time == currentTime && x.Status == status && x.Agent == agent).Select(y => y.Count = getCountOfWorkItemsByStatus(status));
+                }
+                else
+                {
+                    //Create new entry
+                    ListStatus liststatus = new ListStatus(agent, status, getCountOfWorkItemsByStatus(status), currentTime);
+                    AgentSimulation.ListStatuses.Add(liststatus);
+                }
             }
 
         }

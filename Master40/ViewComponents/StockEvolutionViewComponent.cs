@@ -40,6 +40,7 @@ namespace Master40.ViewComponents
             {
                 MaintainAspectRatio = false,
                 Responsive = true,
+                
                 Scales = new Scales
                 {
                     YAxes = new List<Scale> { new CartesianScale { Id = "first-y-axis", Type = "linear", Display = true, ScaleLabel = new ScaleLabel{ LabelString = "Value in €", Display = true, FontSize = 12 } } },
@@ -76,6 +77,7 @@ namespace Master40.ViewComponents
                         BorderWidth = 1,
                         Label = article,
                         ShowLine = true,
+                        SteppedLine = "before",
                         //SteppedLine = true,
                         LineTension = 0
                         , Hidden = (article.Equals("Dump-Truck") || article.Equals("Race-Truck")) ? false : true

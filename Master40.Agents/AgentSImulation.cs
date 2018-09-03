@@ -84,10 +84,11 @@ namespace Master40.Agents
             foreach (var machine in _productionDomainContext.Machines.Include(m => m.MachineGroup))
             {
                 system.ChildAgents.Add(new MachineAgent(creator: system,
-                                                           name: "Machine: " + machine.Name,
+                                                           name: machine.Name,
                                                           debug: true,
                                                  directoryAgent: directoryAgent,
                                                         machine: machine,
+                                                        queueLength: 45,
                                                         simConfiguration: simConfig,
                                                  workTimeGenerator: randomWorkTime,
                                                  setupTimeGenerator: randomWorkTime

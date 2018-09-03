@@ -53,15 +53,17 @@
                 <tr>
                     <th>Machine</th>
                     <th>Workload</th>
+                    <th>Setuptime</th>
                 </tr>
                 </thead>
 
                 @for (int i = 0; i < chart.Data.Datasets[0].Data.Count(); i++)
                 {
-                    <tr>
-                        <td>@chart.Data.Labels[i]</td>
-                        <td>@chart.Data.Datasets[0].Data[i] %</td>
-                    </tr>
+                <tr>
+                    <td>@chart.Data.Labels[i]</td>
+                    <td>@chart.Data.Datasets[1].Data[i] %</td>
+                    <td>@chart.Data.Datasets[0].Data[i] %</td>
+                </tr>
                 }
             </table>
         </div>

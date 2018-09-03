@@ -44,6 +44,22 @@ namespace Master40.Controllers
             return ViewComponent("MachinesWorkLoad", new List<string> { simulationId, simulationType, simNumber, overTime });
         }
 
+        [HttpGet("[Controller]/MachinesSetup/{simulationId}/{simulationType}/{simNumber}")]
+        public IActionResult MachineSetup(string simulationId, string simulationType, string simNumber, string overTime)
+        {
+            //call to Diagramm
+            return ViewComponent("MachineSetup", new List<string>{ simulationId, simulationType, simNumber });
+        }
+
+        [HttpGet("[Controller]/MachineWorkQueueStatus/{simulationId}/{simulationType}/{simNumber}")]
+        public IActionResult MachineWorkQueueStatus(string simulationId, string simulationType, string simNumber, string machine)
+        {
+            //call to Diagramm
+            var vc =ViewComponent("MachineWorkQueueStatus", new List<string> { simulationId, simulationType, simNumber, machine});
+
+            return vc;
+        }
+
 
         [HttpGet("[Controller]/Timeliness/{simulationId}/{simulationType}/{simNumber}")]
         public IActionResult OrderTimeliness(string simulationId, string simulationType, string simNumber)

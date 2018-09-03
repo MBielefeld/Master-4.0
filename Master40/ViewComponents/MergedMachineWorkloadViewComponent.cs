@@ -100,7 +100,7 @@ namespace Master40.ViewComponents
                     {
 
                         Kpi machine = null;
-                        var t  = machines.Where(x => x.Name == machineName && x.SimulationConfigurationId == t1.Item1 && x.SimulationType == t1.Item2).Distinct();
+                        var t  = machines.Where(x => x.Name == machineName && x.SimulationConfigurationId == t1.Item1 && x.SimulationType == t1.Item2 && x.Status =="Work").Distinct();
                         machine = t.Single();
 
                         var percent = Math.Round(machine.Value * 100, 2);

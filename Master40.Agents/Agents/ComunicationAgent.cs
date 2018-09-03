@@ -53,7 +53,7 @@ namespace Master40.Agents.Agents
             else
             {
                 // reset Item.
-                DebugMessage("Got Item to Requeue: " + workItem.WorkSchedule.Name + "| with status:" + workItem.Status);
+                //DebugMessage("Got Item to Requeue: " + workItem.WorkSchedule.Name + "| with status:" + workItem.Status);
                 workItem.EstimatedEnd = 0;
                 workItem.MachineAgentId = Guid.Empty;
                 workItem.Proposals.Clear();
@@ -65,6 +65,9 @@ namespace Master40.Agents.Agents
                                       objectToProcess: workItem,
                                           targetAgent: agent);
             }
+
+            //OutputItemStatus
+            WorkItemQueue.CreateOrUpdateWorkItemListStatus(this, (int)Context.TimePeriod);
         }
 
         private void SetWorkItemStatus(InstructionSet instructionSet)
@@ -99,6 +102,10 @@ namespace Master40.Agents.Agents
                                               targetAgent: GetMachineAgentById(workItem.MachineAgentId));
                     DebugMessage("Call for Work");
                 }
+
+
+                //OutputItemStatus
+                WorkItemQueue.CreateOrUpdateWorkItemListStatus(this, (int)Context.TimePeriod);
             }
         }
 
@@ -133,7 +140,7 @@ namespace Master40.Agents.Agents
 
             workItem.Proposals.Add(proposal);
 
-            DebugMessage("Proposal for Schedule: " + proposal.PossibleSchedule + " from: " + proposal.AgentId + "!");
+            //DebugMessage("Proposal for Schedule: " + proposal.PossibleSchedule + " from: " + proposal.AgentId + "!");
 
 
             // if all Machines Answered
@@ -151,21 +158,35 @@ namespace Master40.Agents.Agents
                     return;
                 }
 
+                Proposal acknowledgement;
                 // aknowledge Machine -> therefore get Machine -> send aknowledgement
-                var acknowledgement = workItem.Proposals.First(x => x.PossibleSchedule == workItem.Proposals.Where(y => y.Postponed == false)
+                if (workItem.Proposals.Any(x => x.HasMachineToolAlreadyEquipped > 0 && x.Postponed == false)){
+                    acknowledgement = workItem.Proposals.Where(y => y.HasMachineToolAlreadyEquipped > 0 && y.Postponed == false).OrderBy(x => x.HasMachineToolAlreadyEquipped).FirstOrDefault();
+                }
+                else
+                {
+                    acknowledgement = workItem.Proposals.First(x => x.PossibleSchedule == workItem.Proposals.Where(y => y.Postponed == false)
                                                                                                             .Min(p => p.PossibleSchedule)
                                                                  && x.Postponed == false);
+                }
 
-                
                 workItem.MachineAgentId = acknowledgement.AgentId;
-                workItem.EstimatedEnd = acknowledgement.PossibleSchedule + workItem.WorkSchedule.Duration;
+                workItem.EstimatedEnd = acknowledgement.PossibleSchedule + workItem.WorkSchedule.Duration + workItem.SetupDuration;
                 
                 // set Proposal Start for Machine to Reque if time slot is closed.
                 workItem.EstimatedStart = acknowledgement.PossibleSchedule;
+                
+                //OutputItemStatus
+                WorkItemQueue.CreateOrUpdateWorkItemListStatus(this, (int)Context.TimePeriod);
 
                 CreateAndEnqueueInstuction(methodName: MachineAgent.InstuctionsMethods.AcknowledgeProposal.ToString(),
                                       objectToProcess: workItem,
                                           targetAgent: GetMachineAgentById(acknowledgement.AgentId));
+
+
+
+                //OutputItemStatus
+                WorkItemQueue.CreateOrUpdateWorkItemListStatus(this, (int)Context.TimePeriod);
             }
         }
 
@@ -175,8 +196,6 @@ namespace Master40.Agents.Agents
         /// <param name="instructionSet"></param>
         private void FinishWorkItem(InstructionSet instructionSet)
         {
-            //OutputItemStatus
-            WorkItemQueue.reportAllWorkItemsByStatus(this, (int) Context.TimePeriod);
 
             var status = instructionSet.ObjectToProcess as Model.WorkItemStatus;
             if (status == null)
@@ -190,6 +209,9 @@ namespace Master40.Agents.Agents
             CreateAndEnqueueInstuction(methodName: ProductionAgent.InstuctionsMethods.Finished.ToString(),
                                   objectToProcess: status,
                                       targetAgent: workItem.ProductionAgent);
+
+            //OutputItemStatus
+            WorkItemQueue.CreateOrUpdateWorkItemListStatus(this, (int)Context.TimePeriod);
         }
 
         

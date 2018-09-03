@@ -62,7 +62,7 @@ namespace Master40.DB.Data.Initializer
 
             var machineGroupToolsDrill = new List<MachineTool>
             {
-                machineTools.Single(a => a.Name == "Drillhead1")
+                machineTools.Single(a => a.Name == "MachineTool")
             };
 
             var machineGroupToolsCutAndDrill = new List<MachineTool>() {
@@ -164,6 +164,7 @@ namespace Master40.DB.Data.Initializer
                 new WorkSchedule{ ArticleId = articles.Single(a => a.Name == "Tisch-Bein").Id, Name = "Zuschneiden", Duration=5, MachineGroupId=machines.Single(n=> n.Name=="Machine Allrounder").MachineGroupId, HierarchyNumber = 10, MachineToolId=machineTools.Single(a => a.Name == "Saw1").Id },
                 new WorkSchedule{ ArticleId = articles.Single(a => a.Name == "Tisch-Bein").Id, Name = "Löcher vorbohren", Duration=2, MachineGroupId=machines.Single(n=> n.Name=="Machine Allrounder").MachineGroupId, HierarchyNumber = 20, MachineToolId=machineTools.Single(a => a.Name == "Drillhead1").Id },
             };
+
             context.WorkSchedules.AddRange(workSchedule);
             context.SaveChanges();
             
@@ -190,8 +191,8 @@ namespace Master40.DB.Data.Initializer
             var simConfig = new SimulationConfiguration
             {
                 Name = "Test config",
-                LotsizeType = LotsizeType.LotsizeStatic,
-                Lotsize = 5, //Not active 
+                LotsizeType = LotsizeType.LotsizeStatic, //not active
+                Lotsize = 5, //not active 
                 MaxCalculationTime = 120, // test  // 10080, // 7 days
                 OrderQuantity = 0,
                 Seed = 1338,
@@ -199,7 +200,7 @@ namespace Master40.DB.Data.Initializer
                 OrderRate = 0.25, //0.25
                 Time = 0,
                 RecalculationTime = 1440,
-                SimulationEndTime = 1000,
+                SimulationEndTime = 2500,
                 DecentralRuns = 0,
                 CentralRuns = 0,
                 DynamicKpiTimeSpan = 120,
@@ -217,7 +218,7 @@ namespace Master40.DB.Data.Initializer
                 BusinessPartnerId = buisnessPartnerList[0].Id,
                 CreationTime = 0,
                 Name = "BeispielOrder 1",
-                DueTime = 1000
+                DueTime = 350
             };
             context.Add(order);
             context.SaveChanges();
@@ -234,7 +235,7 @@ namespace Master40.DB.Data.Initializer
                 BusinessPartnerId = buisnessPartnerList[0].Id,
                 CreationTime = 300,
                 Name = "BeispielOrder 2",
-                DueTime = 2000
+                DueTime = 1500
             };
             context.Add(order2);
             context.SaveChanges();

@@ -20,5 +20,6 @@ namespace Master40.DB.Models
         public int SimulationNumber { get; set; }
         public int Time { get; set; }
         public string Status { get; set; } 
+        public string AgentType { get; set; }
     }
 }

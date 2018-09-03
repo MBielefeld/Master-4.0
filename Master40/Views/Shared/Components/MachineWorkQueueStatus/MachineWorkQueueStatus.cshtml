@@ -1,0 +1,58 @@
+﻿@{
+    List<ChartJSCore.Models.Chart> charts = (List<ChartJSCore.Models.Chart>)ViewData["chart"];
+    List<string> raws = new List<string>();
+    string type = ViewData["Type"].ToString();
+    List<string> machines = (List<string>)ViewData["machines"];
+    if (charts != null)
+    {
+        int i = 0;
+        foreach(ChartJSCore.Models.Chart chart in charts) {
+            raws.Add(chart.CreateChartCode("QueueStatus_" + type + i));
+            i++;
+        }
+    }
+}
+
+<style>
+    .chartWrapper {
+        position: relative;
+    }
+
+        .chartWrapper > canvas {
+            position: absolute;
+            left: 0;
+            top: 0;
+            pointer-events: none;
+        }
+
+    .chartAreaWrapper {
+        position: relative;
+        width: 100%;
+    }
+
+    .chartAreaWrapper2 {
+        position: relative;
+        height: 100px;
+    }
+</style>
+@{int j = 0;}
+@foreach (ChartJSCore.Models.Chart chart in charts)
+{
+    <div class="row">
+        <div class="chartWrapper">
+            <div class="chartAreaWrapper">
+                <div class="chartAreaWrapper2">
+                    <!--div id="js-legend" class="chart-legend"><div-->
+                    <canvas id="QueueStatus_@type@j" height="80"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+    j++;
+}
+    <script>
+    @foreach(string raw in raws)
+    {
+    @Html.Raw(raw);
+    }
+    </script>

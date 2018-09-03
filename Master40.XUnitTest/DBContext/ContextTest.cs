@@ -43,7 +43,8 @@ namespace Master40.XUnitTest.DBContext
             //MasterDBInitializerSmall.DbInitialize(_ctx);
             _productionDomainContext.Database.EnsureDeleted();
             _productionDomainContext.Database.EnsureCreated();
-            MasterDBInitializerBasic.DbInitialize(_productionDomainContext);
+            //MasterDBInitializerBasic.DbInitialize(_productionDomainContext);
+            MasterDBInitializerLarge.DbInitialize(_productionDomainContext);
         }
 
         /// <summary>

@@ -31,38 +31,6 @@ namespace Master40.Tools.Simulation
             CalculateLayTimes(context, simulationId, simulationType, simulationNumber, final, time);
         }
 
-        public static void CalculateWorkList(ProductionDomainContext context, int simulationId,
-            SimulationType simulationType, int simulationNumber)
-        { 
-            if (context!= null)
-            {
-                var simConfig = context.SimulationConfigurations.Single(a => a.Id == simulationId);
-
-                //var workListContext = context.
-                
-                /*var workItemListContext = context.Kpis.
-
-                context.Kpis.Add(new Kpi()
-                {
-                    Name = ,
-                    Value = getCountOfWorkItemsByStatus(status),
-                    ValueMin = 0,
-                    ValueMax = 0,
-                    IsKpi = false,
-                    KpiType = KpiType.ListStatus,
-                    SimulationConfigurationId = simulationId,
-                    SimulationType = simulationType,
-                    SimulationNumber = simulationNumber,
-                    IsFinal = final
-                });
-                */
-            }
-            else {
-
-                throw new Exception();
-            }
-        }
-
         public static void CalculateLayTimes(ProductionDomainContext context, int simulationId,
             SimulationType simulationType, int simulationNumber, bool final, int time)
         {
@@ -205,12 +173,13 @@ namespace Master40.Tools.Simulation
             var finishedProducts = final
                 ? context.SimulationWorkschedules
                     .Where(x => x.SimulationConfigurationId == simulationId && x.SimulationType == simulationType)
-                    .Where(a => a.ParentId.Equals("[]") && a.Start > simConfig.SettlingStart && a.HierarchyNumber == 20 && 
+                    .Where(a => a.ParentId.Equals("[]") && a.Start > simConfig.SettlingStart && a.HierarchyNumber == 10 && 
                            a.End <= simConfig.SimulationEndTime).ToList()
                 : context.SimulationWorkschedules
                     .Where(x => x.SimulationConfigurationId == simulationId && x.SimulationType == simulationType).Where(a =>
-                    a.ParentId.Equals("[]") && a.Start >= time - simConfig.DynamicKpiTimeSpan && a.HierarchyNumber == 20 &&
+                    a.ParentId.Equals("[]") && a.Start >= time - simConfig.DynamicKpiTimeSpan && a.HierarchyNumber == 10 &&
                     a.End <= time - simConfig.DynamicKpiTimeSpan).ToList();
+            // && a.HierarchyNumber == 20
             var leadTimes = new List<Kpi>();
             var tts = new List<Kpi>();
             var simulationWorkSchedules = context.SimulationWorkschedules.Where(
@@ -231,8 +200,8 @@ namespace Master40.Tools.Simulation
                     IsFinal = final
                 });
             }
-
-            var products = leadTimes.Where(a => a.Name.Contains("-Truck")).Select(x => x.Name).Distinct();
+            
+            var products = leadTimes.GroupBy(x => x.Name).Select(k => k.First().Name).ToList();
             var leadTimesBoxPlot = tts;
             //calculate Average per article
 
@@ -446,23 +415,24 @@ namespace Master40.Tools.Simulation
                                                                 && a.SimulationNumber == simulationNumber
                                                                 && a.SimulationType == simulationType
                                                                 && a.SimulationConfigurationId == simulationId)
-                    .Select(x => new {x.Start, x.End, x.Machine}).Distinct().ToList()
+                    .Select(x => new {x.Start, x.End, x.Machine, x.setupEnd, x.setupStart}).Distinct().ToList()
                 : context.SimulationWorkschedules.Where(a => a.Start >= time - simConfig.DynamicKpiTimeSpan
                                                                 && a.End <= time
                                                                 && a.SimulationNumber == simulationNumber
                                                                 && a.SimulationType == simulationType
                                                                 && a.SimulationConfigurationId == simulationId)
-                    .Select(x => new {x.Start, x.End, x.Machine}).Distinct().ToList();
+                    .Select(x => new {x.Start, x.End, x.Machine, x.setupEnd, x.setupStart}).Distinct().ToList();
                 
             //get SimulationTime
             var simulationTime = final
                 ? simConfig.SimulationEndTime - simConfig.SettlingStart
                 : simConfig.DynamicKpiTimeSpan;
 
-            var kpis = content.GroupBy(x => x.Machine).Select(g => new Kpi()
+            var kpisWork = content.Where(a => a.End - a.Start != 0).GroupBy(x => x.Machine).Select(g => new Kpi()
             {
                 Value = Math.Round((double) (g.Sum(x => x.End) - g.Sum(x => x.Start)) / simulationTime, 2),
                 Name = g.Key,
+                Status = "Work",
                 IsKpi = final,
                 KpiType = KpiType.MachineUtilization,
                 SimulationConfigurationId = simulationId,
@@ -472,7 +442,24 @@ namespace Master40.Tools.Simulation
                 IsFinal = final
             }).ToList();
 
-            context.Kpis.AddRange(kpis);
+            context.Kpis.AddRange(kpisWork);
+
+            var kpisSetup = content.Where(a => a.setupEnd - a.setupStart != 0).GroupBy(x => x.Machine).Select(g => new Kpi()
+            {
+                Value = Math.Round((double)(g.Sum(x => x.setupEnd) - g.Sum(x => x.setupStart)) / simulationTime, 2),
+                Name = g.Key,
+                Status = "Setup",
+                IsKpi = final,
+                KpiType = KpiType.MachineUtilization,
+                SimulationConfigurationId = simulationId,
+                SimulationType = simulationType,
+                SimulationNumber = simulationNumber,
+                Time = time,
+                IsFinal = final
+            }).ToList();
+
+            context.Kpis.AddRange(kpisSetup);
+
             context.SaveChanges();
 
             if (!final)
@@ -486,15 +473,15 @@ namespace Master40.Tools.Simulation
                                                     && a.Time > simConfig.SettlingStart
                                                     && a.Time < simConfig.SimulationEndTime).ToList();
             //for each machine
-            for (var i = 0; i < kpis.Count(); i++)
+            for (var i = 0; i < kpisWork.Count(); i++)
             {
-                var list = allKpis.Where(a => a.Name == kpis[i].Name).ToList();
+                var list = allKpis.Where(a => a.Name == kpisWork[i].Name).ToList();
                 if (list.Count == 0 || list.Count == 1)
                     continue;
-                kpis[i].Count = list.Sum(item => Math.Pow(item.Value - kpis[i].Value, 2)) / (list.Count - 1.00);
-                kpis[i].ValueMin = kpis[i].Count / list.Count;
+                kpisWork[i].Count = list.Sum(item => Math.Pow(item.Value - kpisWork[i].Value, 2)) / (list.Count - 1.00);
+                kpisWork[i].ValueMin = kpisWork[i].Count / list.Count;
             }
-            context.UpdateRange(kpis);
+            context.UpdateRange(kpisWork);
             context.SaveChanges();
         }
 

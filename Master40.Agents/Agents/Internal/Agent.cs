@@ -27,6 +27,7 @@ namespace Master40.Agents.Agents.Internal
         internal Agent Creator { get; set; }
         internal List<Agent> ChildAgents { get; set; }
         public string Name { get; set; }
+        public string AgentType { get; set; }
         public bool DebugThis { get; set; }
         internal Status Status { get; set; }
         public Queue<InstructionSet> InstructionQueue { get; set; }
@@ -35,6 +36,7 @@ namespace Master40.Agents.Agents.Internal
         {
             AgentId = Guid.NewGuid();
             AgentCounter.Add(this.GetType().Name);
+            this.AgentType = this.GetType().Name;
             this.Name = name;
             this.DebugThis = debug;
             this.InstructionQueue = new Queue<InstructionSet>();
@@ -175,7 +177,7 @@ namespace Master40.Agents.Agents.Internal
         {
             if (DebugThis)
             {
-                var logItem = "Time(" + Context.TimePeriod + ").Agent(" + Name + ") : " + msg;
+                var logItem = "Time(" + Context.TimePeriod + ").Agent(" + AgentType + ": " + Name + ") : " + msg;
                 Debug.WriteLine(logItem);
                 AgentStatistic.Log.Add(logItem);
             }

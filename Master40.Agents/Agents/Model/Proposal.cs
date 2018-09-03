@@ -8,6 +8,7 @@ namespace Master40.Agents.Agents.Model
         public bool Postponed { get; set; }
         public int PostponedFor { get; set; }
         public Guid AgentId { get; set; }
-        public Guid WorkItemId { get; set; }
+        public Guid WorkItemId { get; set;}
+        public int HasMachineToolAlreadyEquipped { get; set; }
     }
 }

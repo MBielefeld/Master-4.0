@@ -9,6 +9,6 @@ namespace Master40.DB.Enums
         LotsizeOne,
         LotsizeStatic,
         LotsizeHeuristic,
-        LotsizeDynamic
+        LotsizeDynamic,
     }
 }

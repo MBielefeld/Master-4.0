@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Master40.DB.Models;
+using Master40.DB.DB.Models;
 
 namespace Master40.DB.Data.Context
 {

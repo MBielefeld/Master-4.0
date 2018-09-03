@@ -11,6 +11,7 @@ namespace Master40.DB.Models
         [JsonIgnore]
         public MachineGroup MachineGroup { get; set; }
         public MachineTool MachineTool { get; set; }
+        public MachineTool PlannedMachineTool { get; set; }
         public int Capacity { get; set; }
         [JsonIgnore]
         public virtual ICollection<ProductionOrderWorkSchedule> ProductionOrderWorkSchedules { get; set; }

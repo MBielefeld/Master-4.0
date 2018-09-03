@@ -112,8 +112,13 @@ namespace Master40.Agents.Agents
             var requestProvidable = RequestedItems.FirstOrDefault(x => x.DueTime == RequestedItems.Min(r => r.DueTime));
             // TODO: Prove if quantity check is required.
 
-            if (requestProvidable.IsHeadDemand && requestProvidable.DueTime > Context.TimePeriod) { return; }
-            // else
+            if (requestProvidable.IsHeadDemand && requestProvidable.DueTime > Context.TimePeriod) {
+                return;
+            }
+            else
+            {
+
+            }
             ProvideArticle(requestProvidable);
 
         }

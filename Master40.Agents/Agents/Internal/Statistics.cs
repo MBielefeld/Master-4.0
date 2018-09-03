@@ -23,7 +23,8 @@ namespace Master40.Agents.Agents.Internal
                 OrderId = "[" + orderId + "]",
                 HierarchyNumber = ws.WorkSchedule.HierarchyNumber,
                 ProductionOrderId = "[" + ws.ProductionAgent.AgentId.ToString() + "]",
-                Parent = isHeadDemand.ToString()
+                Parent = isHeadDemand.ToString(), 
+                MachineTool = ws.WorkSchedule.MachineTool.Name
             };
             AgentSimulation.SimulationWorkschedules.Add(sws);
         }
@@ -64,22 +65,25 @@ namespace Master40.Agents.Agents.Internal
             {
                 foreach (ListStatus ls in listStatus)
                 {
-
-                    kpiList.Add(new Kpi()
+                    if (ls.Agent != null)
                     {
-                        Name = ls.Agent.Name,
-                        Value = ls.Count,
-                        ValueMin = 0,
-                        ValueMax = 1000,
-                        IsKpi = true,
-                        Status = ls.Status.ToString(),
-                        KpiType = KpiType.WorkItemListStatus,
-                        SimulationConfigurationId = simulationId,
-                        SimulationType = simluationType,
-                        SimulationNumber = simNumber,
-                        Time = ls.Time,
-                        IsFinal = true
-                    });
+                        kpiList.Add(new Kpi()
+                        {
+                            Name = ls.Agent.Name,
+                            AgentType = ls.Agent.GetType().Name,
+                            Value = ls.Count,
+                            ValueMin = 0,
+                            ValueMax = 1000,
+                            IsKpi = true,
+                            Status = ls.Status.ToString(),
+                            KpiType = KpiType.WorkItemListStatus,
+                            SimulationConfigurationId = simulationId,
+                            SimulationType = simluationType,
+                            SimulationNumber = simNumber,
+                            Time = ls.Time,
+                            IsFinal = true
+                        });
+                    }
                 }
             }
             return kpiList;

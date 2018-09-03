@@ -97,7 +97,7 @@ $(document).ready(function () {
 Chart.plugins.register({
     afterDatasetsUpdate: function (chart) {
         if (chart.chart.chart.config.options.title.text === "Machine Workloads") {
-            Chart.helpers.each(chart.getDatasetMeta(2).data, function (rectangle, index) {
+            Chart.helpers.each(chart.getDatasetMeta(3).data, function (rectangle, index) {
                 rectangle._view.width = rectangle._model.width = 10;
             });
         }

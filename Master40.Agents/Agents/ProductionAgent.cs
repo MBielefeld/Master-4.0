@@ -17,18 +17,16 @@ namespace Master40.Agents.Agents
         private List<ComunicationAgent> ComunicationAgents;
         private List<WorkItem> WorkItems { get; set; }
         int Lotsize { set; get; }
-        public ProductionAgent(Agent creator, string name, bool debug, RequestItem requestItem, SimulationConfiguration simConfiguration) 
+        public ProductionAgent(Agent creator, string name, bool debug, RequestItem requestItem) 
             : base(creator, name, debug)
         {
             RequestItem = requestItem;
-            simulationConfiguration = simConfiguration;
             //RequestArtikles = new List<RequestItem>();
             ComunicationAgents = new List<ComunicationAgent>();
             DebugMessage("Woke up. My dueTime is :" + requestItem.DueTime);
             StartProductionAgent();
         }
-
-
+        
         public enum InstuctionsMethods
         {
             Finished,
@@ -70,8 +68,7 @@ namespace Master40.Agents.Agents
                                                 system: ((StorageAgent)Creator).Creator,
                                                 name: RequestItem.Article.Name + " Child of(" + this.Name + ")",
                                                 debug: DebugThis,
-                                                requestItem: item,
-                                                simConfiguration: simulationConfiguration);
+                                                requestItem: item);
                 // add to childs
                 ChildAgents.Add(dispoAgent);
                 //RequestMaterials.Add(item);

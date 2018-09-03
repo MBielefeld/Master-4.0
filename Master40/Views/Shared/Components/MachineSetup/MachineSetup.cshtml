@@ -1,0 +1,151 @@
+@{
+    string type = ViewData["Type"].ToString();
+    string simId = ViewData["simId"].ToString();
+    string simNumber = ViewData["simNumber"].ToString();
+    List<string> parameters = new List<string>();
+    parameters.Add(simId);
+    parameters.Add(type);
+    parameters.Add(simNumber);
+    parameters.Add("null");
+    List<double> dataSetupList = (List<double>)ViewData["dataSetupList"];
+    List<double> dataWorkList = (List<double>)ViewData["dataWorkList"];
+    List<double> dataRatioList = (List<double>)ViewData["dataRatioList"];
+    List<double> dataSetupTimeList = (List<double>)ViewData["dataSetupTimeList"];
+    List<double> dataWorkTimeList = (List<double>)ViewData["dataWorkTimeList"];
+    List<double> dataRatioTimeList = (List<double>)ViewData["dataRatioTimeList"];
+    List<string> machines = (List<string>)ViewData["machines"];
+    List<string> machinesTools = (List<string>)ViewData["machineTools"];
+    List<List<double>> totalList = new List<List<double>>();
+    totalList.Add(dataSetupList);
+    totalList.Add(dataWorkList);
+    totalList.Add(dataRatioList);
+
+    int n = 0;
+    int m = 0;
+}
+
+<style>
+    .chartWrapper {
+        position: relative;
+    }
+
+        .chartWrapper > canvas {
+            position: absolute;
+            left: 0;
+            top: 0;
+            pointer-events: none;
+        }
+
+    .chartAreaWrapper {
+        overflow-x: scroll;
+        position: relative;
+        width: 100%;
+    }
+
+    .chartAreaWrapper2 {
+        position: relative;
+        height: 300px;
+    }
+</style>
+<!--iterate through machines and create expandble row for each machine-->
+
+@for (int i = 0; i <= machines.Count - 1; i++)
+{
+    <div class="row">
+        <div class="col-md-12">
+            <div class="panel-group">
+                <div class="panel panel-default">
+                    <div class="panel-heading">
+                        <h4 class="panel-title">
+                            <a data-toggle="collapse" href="#setupBox_@i">@machines[i] Setup</a>
+                        </h4>
+                    </div>
+                    <div Id="setupBox_@i" class="panel-collapse collapse in">
+                        <!--Items Table-->
+                        <div class="panel-body">
+                            <table class="table table-responsive table-striped table-condensed">
+                                <thead>
+                                    <tr>
+                                        <th></th>
+                                        <th>Amount of WorkItems</th>
+                                        <th>Amount of Setups</th>
+                                        <th>Work to Setup Ratio</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @for (int j = 0; j < machinesTools.Count; j++)
+                                    {
+                                        <tr>
+                                            <td>@machinesTools[j]</td>
+                                            <td>@dataWorkList[n].ToString()</td>
+                                            <td>@dataSetupList[n].ToString()</td>
+                                            <td>@dataRatioList[n].ToString()</td>
+                                        </tr>
+                                        n++;
+                                    }
+                                    <tr>
+                                        <td></td>
+                                        <td></td>
+                                        <td></td>
+                                        <td></td>
+                                    </tr>
+                                    <tr>
+                                        <td>Total machine</td>
+                                        <td>@dataWorkList[n].ToString()</td>
+                                        <td>@dataSetupList[n].ToString()</td>
+                                        <td>@dataRatioList[n].ToString()</td>
+                                    </tr>
+                                    @{n++;}
+                                </tbody>
+                            </table>
+                            <!---
+                            <table class="table table-responsive table-striped table-condensed">
+                                <thead>
+                                    <tr>
+                                        <th></th>
+                                        <th>Time of WorkItems</th>
+                                        <th>Time of Setups</th>
+                                        <th>Work Time to Setup Time Ratio</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @for (int j = 0; j < machinesTools.Count; j++)
+                                    {
+                                        <tr>
+                                            <td>@machinesTools[j]</td>
+                                            <td>@dataWorkTimeList[m].ToString()</td>
+                                            <td>@dataSetupTimeList[m].ToString()</td>
+                                            <td>@dataRatioTimeList[m].ToString()</td>
+                                        </tr>
+                                        m++;
+                                    }
+                                    <tr>
+                                        <td></td>
+                                        <td></td>
+                                        <td></td>
+                                        <td></td>
+                                    </tr>
+                                    <tr>
+                                        <td>Total machine times</td>
+                                        <td>@dataWorkTimeList[m].ToString()</td>
+                                        <td>@dataSetupTimeList[m].ToString()</td>
+                                        <td>@dataRatioTimeList[m].ToString()</td>
+                                    </tr>
+                                    @{m++;}
+                                </tbody>
+                            </table>-->
+                            <div>
+                                @{parameters[3] = machines[i];}
+                                <!--await Component.InvokeAsync("MachineWorkQueueStatus", parameters)-->
+
+                            </div>
+                        </div>
+                       
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+<script>
+</script>

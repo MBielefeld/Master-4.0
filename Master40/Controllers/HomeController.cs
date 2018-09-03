@@ -31,16 +31,17 @@ namespace Master40.Controllers
                             _context.Database.EnsureDeleted();
                             MasterDBInitializerBasic.DbInitialize(_context);
                             break;
-                            /* MARVIN 22.05.2018 Funktion deaktiviert
-                        case "medium":
-                            _context.Database.EnsureDeleted();
-                            MasterDBInitializerMedium.DbInitialize(_context);
-                            break;
+                        /* MARVIN 22.05.2018 Funktion deaktiviert
+                    case "medium":
+                        _context.Database.EnsureDeleted();
+                        MasterDBInitializerMedium.DbInitialize(_context);
+                        break;
+                        */
                         default:
                             _context.Database.EnsureDeleted();
                             MasterDBInitializerLarge.DbInitialize(_context);
                             break;
-                            */
+                            
                     }
                     
                 }

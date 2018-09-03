@@ -29,7 +29,7 @@ namespace Master40.Agents.Agents
             {
                 // Create ComunicationAgent if not existent
                 comunicationAgent = new ComunicationAgent(creator: this,
-                                                             name: "Comunication ->" + objects.ObjectToProcess, 
+                                                             name: objects.ObjectToProcess.ToString(), 
                                                             debug: this.DebugThis, 
                                                      contractType: objects.ObjectToProcess.ToString());
 
