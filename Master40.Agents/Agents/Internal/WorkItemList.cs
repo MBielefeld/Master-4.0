@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Text;
 using Master40.Agents.Agents.Internal;
 using Master40.Agents.Agents;
-using Microsoft.EntityFrameworkCore.Storage;
 using System.Linq;
 
 namespace Master40.Agents.Agents.Model
@@ -22,19 +21,20 @@ namespace Master40.Agents.Agents.Model
             {
                 if(AgentSimulation.ListStatuses.Any(x => x.Time == currentTime && x.Agent.Equals(agent) && x.Status == status)){
                     //Update entries
-                    AgentSimulation.ListStatuses.Where(x => x.Time == currentTime && x.Status == status && x.Agent == agent).Select(y => y.Count = getCountOfWorkItemsByStatus(status));
+                    AgentSimulation.ListStatuses.Where(x => x.Time == currentTime && x.Status == status && x.Agent.Equals(agent))
+                        .Select(y => y.Count = GetCountOfWorkItemsByStatus(status));
                 }
                 else
                 {
                     //Create new entry
-                    ListStatus liststatus = new ListStatus(agent, status, getCountOfWorkItemsByStatus(status), currentTime);
+                    ListStatus liststatus = new ListStatus(agent, status, GetCountOfWorkItemsByStatus(status), currentTime);
                     AgentSimulation.ListStatuses.Add(liststatus);
                 }
             }
 
         }
 
-        private int getCountOfWorkItemsByStatus(Status status)
+        private int GetCountOfWorkItemsByStatus(Status status)
         {
             var count = 0;
             foreach (WorkItem Item in this)

@@ -4,8 +4,6 @@ using System.Linq;
 using Master40.DB.Data.Context;
 using Master40.DB.Models;
 using Master40.DB.Enums;
-using System.Collections;
-using System.Collections.ObjectModel;
 
 namespace Master40.DB.Data.Initializer
 {

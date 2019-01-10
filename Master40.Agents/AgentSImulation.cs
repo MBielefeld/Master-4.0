@@ -21,7 +21,7 @@ namespace Master40.Agents
     {
         private readonly ProductionDomainContext _productionDomainContext;
         public static List<SimulationWorkschedule> SimulationWorkschedules;
-        public static List<ListStatus> ListStatuses;
+        public static List<ListStatus> ListStatuses { get; set; }
         private IMessageHub _messageHub;
 
         public AgentSimulation(ProductionDomainContext productionDomainContext, IMessageHub messageHub)

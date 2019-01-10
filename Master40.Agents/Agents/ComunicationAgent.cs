@@ -161,12 +161,15 @@ namespace Master40.Agents.Agents
                 Proposal acknowledgement;
                 // aknowledge Machine -> therefore get Machine -> send aknowledgement
                 if (workItem.Proposals.Any(x => x.HasMachineToolAlreadyEquipped > 0 && x.Postponed == false)){
-                    acknowledgement = workItem.Proposals.Where(y => y.HasMachineToolAlreadyEquipped > 0 && y.Postponed == false).OrderBy(x => x.HasMachineToolAlreadyEquipped).FirstOrDefault();
+                    acknowledgement = workItem.Proposals.Where(y => y.HasMachineToolAlreadyEquipped > 0 && y.Postponed == false)
+                                                        .OrderBy(x => x.HasMachineToolAlreadyEquipped)
+                                                        .FirstOrDefault();
                 }
                 else
                 {
-                    acknowledgement = workItem.Proposals.First(x => x.PossibleSchedule == workItem.Proposals.Where(y => y.Postponed == false)
-                                                                                                            .Min(p => p.PossibleSchedule)
+                    acknowledgement = workItem.Proposals.First(x => x.PossibleSchedule == workItem.Proposals
+                                                                                                    .Where(y => y.Postponed == false)
+                                                                                                    .Min(p => p.PossibleSchedule)
                                                                  && x.Postponed == false);
                 }
 
